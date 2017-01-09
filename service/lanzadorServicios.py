@@ -186,6 +186,10 @@ def get_logs_container(name_stack, url, access_key, secret_key):
         service_logs = out.decode('utf-8')
         # TODO: Decidir que hacer con los logs
         print(service_logs)
+        file_logs = ''.join(['./logs/',name_stack,'.txt'])
+        with open(file_logs,"w") as file:
+            file.write(service_logs)
+
 
 
 logging.critical('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
@@ -194,6 +198,9 @@ parametros_nombre=[] # Prescindible?
 parametros = [] # Prescindible?
 stacks_running = 0
 # sincronizacion = threading.Semaphore(value=stack_limit)
+if(os.path.isdir('./logs')):
+    call(['rm','-rf','./logs'])
+os.mkdir("./logs")
 
 # TODO: Add argparse
 #Lectura de parametros para las url y las keys
