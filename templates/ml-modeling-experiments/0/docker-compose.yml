@@ -12,3 +12,42 @@ services:
         - -c
         - python lanzadorServicios.py $$URL_ENTRADAS $$ACCESS_KEY $$SECRET_KEY
     tty: true
+
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: ${SERVICE_NAME}
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    service: ${SERVICE_NAME}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.rancher.container.start_once: "true"
+        service: ${SERVICE_NAME}
+    spec:
+      containers:
+      - args:
+        - TCP-LISTEN:${LOCAL_PORT},fork
+        - TCP:${TARGET_URI}
+        env:
+        - name: NAMESPACE
+          value: ${NAMESPACE}
+        image: verb/socat:alpine
+        imagePullPolicy: ""
+        name: ${SERVICE_NAME}
+        securityContext:
+          privileged: true
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes: null
+status:
+  replicas: 0

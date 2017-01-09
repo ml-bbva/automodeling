@@ -18,35 +18,29 @@ kind: ReplicationController
 metadata:
   creationTimestamp: null
   labels:
-    service: ${SERVICE_NAME}
-  name: ${SERVICE_NAME}
+    service: impresion-params
+  name: impresion-params
   namespace: ${NAMESPACE}
 spec:
   replicas: 1
   selector:
-    service: ${SERVICE_NAME}
+    service: impresion-params
   template:
     metadata:
       creationTimestamp: null
       labels:
         io.rancher.container.start_once: "true"
-        service: ${SERVICE_NAME}
+        service: impresion-params
     spec:
       containers:
-      - args:
-        - TCP-LISTEN:${LOCAL_PORT},fork
-        - TCP:${TARGET_URI}
+      - entrypoint: "sh"
+        args:
+        - -c
+        - echo $$PARAM1 $$PARAM2; sleep 1000
         env:
         - name: NAMESPACE
           value: ${NAMESPACE}
         image: verb/socat:alpine
         imagePullPolicy: ""
-        name: ${SERVICE_NAME}
-        securityContext:
-          privileged: true
-        resources: {}
+        name: impresion-params
       restartPolicy: Always
-      serviceAccountName: ""
-      volumes: null
-status:
-  replicas: 0

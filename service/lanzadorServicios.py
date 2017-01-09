@@ -53,6 +53,7 @@ def start_stack(name_stack, url, access_key, secret_key):
         'start'])
 
 
+
 def get_params(parametros_yml):
     #Obtiene los parametros para un stack del catalogo
     parametros_nombre=[]
