@@ -1,0 +1,35 @@
+time_stop: 30.0
+limit_stacks: 4
+stacks_catalog:
+  CATALOG1:
+    URL_API: http://185.24.5.196:8080/v1-catalog/templates/testCatalogML:TestCatalog:0
+    URL_RANCHER:
+    ACCESS_KEY:
+    SECRET_KEY:
+    PARAMS:
+      PARAM1:
+          type: absolute
+          param:
+            - Hola
+            - Buenos Dias
+      PARAM2:
+          type: lineal
+          initial-value: 10
+          final-value: 20
+          interval: 2
+  CATALOG2:
+    URL_API:
+    URL_RANCHER:
+    ACCESS_KEY:
+    SECRET_KEY:
+    PARAMS:
+      PARAM1:
+          type: absolute
+          param:
+            - Hola
+            - Buenos Dias
+      PARAM2:
+          type: lineal
+          initial-value: 10
+          final-value: 20
+          interval: 2

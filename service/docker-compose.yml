@@ -1,0 +1,13 @@
+version: '2'
+services:
+  mensajes1:
+    image: alpine
+    environment:
+      PARAM1: ${PARAM1}
+      PARAM2: ${PARAM2}
+    stdin_open: true
+    entrypoint:
+    - sh
+    - -c
+    - echo $$PARAM1 $$PARAM2; sleep 1000
+    tty: true

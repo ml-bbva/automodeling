@@ -1,0 +1,4 @@
+name: lanzadorStacks
+description: |
+  Lanzador de experimentos para diferentes configuraciones de varios stacks del catalogo.
+version: 1.0.0

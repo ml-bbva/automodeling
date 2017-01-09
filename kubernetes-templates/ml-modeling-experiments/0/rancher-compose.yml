@@ -1,0 +1,17 @@
+.catalog:
+    name: "lanzadorStacks"
+    version: "v0.1"
+    description: "Lanzador de experimentos para diferentes configuraciones de varios stacks del catalogo."
+    questions:
+        - variable: ACCESS_KEY
+          label: "Acces key para acceder a rancher"
+          required: true
+          type: "string"
+        - variable: SECRET_KEY
+          label: "Secret key para el acceso a reancher"
+          required: true
+          type: "string"
+        - variable: URL_ENTRADAS
+          label: "Url donde se encuentra el archivo donde leer la lista de parametros."
+          required: true
+          type: "string"
