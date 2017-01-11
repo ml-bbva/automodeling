@@ -30,16 +30,17 @@ def rm_stack(name_stack, url, access_key, secret_key):
         'rm', '--stop', name_stack])
     stacks_running -= 1
 
-def create_stack(name_stack, url, access_key, secret_key):
-    #Crea un stack con el nombre dado
-    call([
-        './exec/rancher-compose',
-        '--url', url,
-        '--access-key', access_key,
-        '--secret-key', secret_key,
-        '--env-file', 'answers.txt',
-        '--project-name', name_stack,
-        'create'])
+def create_nameSpace(nameSpace, url, access_key, secret_key):
+    #Crea un nameSpace con el nombre dado
+    os.system('./exec/kubectl create namespace ' + nameSpace)
+
+def create_service(nameSpace, serviceFile):
+    os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + serviceFile)
+
+def create_replicationController(nameSpace, rcFile):
+    os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + rcFile)
+
+
 
 def start_stack(name_stack, url, access_key, secret_key):
     #Ejecuta el stack con el nombre dado
@@ -51,6 +52,7 @@ def start_stack(name_stack, url, access_key, secret_key):
         '--env-file', 'answers.txt',
         '--project-name', name_stack,
         'start'])
+
 
 
 
