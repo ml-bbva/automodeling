@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    io.rancher.container.hostname_override: container_name
+    service: slave
+  name: slave
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${NUM_SLAVES}
+  selector:
+    service: slave
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: slave
+    spec:
+      containers:
+      - env:
+        - name: NAMESPACE
+          value: ${NAMESPACE}
+        - name: INPUT_SIZE
+          value: "${PRODUCTS}"
+        - name: KAFKA_GROUP
+          value: "${ROOT_TOPIC}-etl-output-consumer"
+        - name: KAFKA_SERVICE
+          value: "${KAFKA_SERVICE}"
+        - name: LABEL_SIZE
+          value: "${PRODUCTS}"
+        - name: METRICS_TOPIC
+          value: "${ROOT_TOPIC}-metrics"
+        - name: JOB_NAME
+          value: "worker"
+        - name: METRIC_INTERVAL
+          value: "${METRIC_INTERVAL}"
+        - name: MODEL_NAME
+          value: "${ROOT_TOPIC}-model"
+        - name: TEST_SIZE
+          value: "${TEST_SIZE}"
+        - name: ARTIFACTORY_URI
+          value: "${REPO_URI}"
+        - name: SAVE_INTERVAL
+          value: "${SAVE_INTERVAL}"
+        - name: BATCH_SIZE
+          value: "${BATCH_SIZE}"
+        - name: HIDDEN_SIZE
+          value: "${HIDDEN_SIZE}"
+        - name: RECOVER_SESSION
+          value: "${RECOVER_SESSION}"
+        - name: TOPIC
+          value: "${ROOT_TOPIC}-etl-output"
+        image: ${TF_IMAGE}
+        imagePullPolicy: ""
+        name: slave
+        ports:
+        - containerPort: 2222
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes: null
+status:
+  replicas: 0

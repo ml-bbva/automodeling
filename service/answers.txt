@@ -1,2 +1,4 @@
-PARAM1=Buenos Dias
-PARAM2=18
+param1=Buenos Dias
+param2=2
+param3=Adios
+param4=Adios

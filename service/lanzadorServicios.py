@@ -27,7 +27,9 @@ def rm_nameSpace(nameSpace):
 
 def create_nameSpace(nameSpace):
     #Crea un nameSpace con el nombre dado
+    global nameSpaces_running
     os.system('./exec/kubectl create namespace ' + nameSpace)
+    nameSpaces_running += 1
 
 def start_service(nameSpace, serviceFile):
     os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + serviceFile)

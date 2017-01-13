@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    io.rancher.container.hostname_override: container_name
+    service: ps
+  name: ps
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${NUM_SERVERS}
+  selector:
+    service: ps
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: ps
+    spec:
+      containers:
+      - env:
+        - name: NAMESPACE
+          value: ${NAMESPACE}
+        - name: ARTIFACTORY_URI
+          value: "${REPO_URI}"
+        - name: BATCH_SIZE
+          value: "${BATCH_SIZE}"
+        - name: HIDDEN_SIZE
+          value: "${HIDDEN_SIZE}"
+        - name: METRIC_INTERVAL
+          value: "${METRIC_INTERVAL}"
+        - name: SAVE_INTERVAL
+          value: "${SAVE_INTERVAL}"
+        - name: TEST_SIZE
+          value: "${TEST_SIZE}"
+        - name: INPUT_SIZE
+          value: "${PRODUCTS}"
+        - name: JOB_NAME
+          value: "ps"
+        - name: LABEL_SIZE
+          value: "${PRODUCTS}"
+        - name: MODEL_NAME
+          value: "${ROOT_TOPIC}-model"
+        - name: RECOVER_SESSION
+          value: "${RECOVER_SESSION}"
+        image: ${TF_IMAGE}
+        imagePullPolicy: ""
+        name: ps
+        ports:
+        - containerPort: 2222
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes: null
+status:
+  replicas: 0
