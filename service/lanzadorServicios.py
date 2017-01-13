@@ -16,42 +16,22 @@ import os
 # interese que escriba en algun lado
 # logger = logging.getLogger('services_launcher')
 
-def rm_stack(name_stack, url, access_key, secret_key):
-    #Borra el stack con el nombre dado y obtiene los logs
-    get_logs_container(
-        name_stack=name_stack, url=url,
-        access_key=access_key, secret_key=secret_key)
-    global stacks_running
-    call([
-        './exec/rancher',
-        '--url', url,
-        '--access-key', access_key,
-        '--secret-key', secret_key,
-        'rm', '--stop', name_stack])
-    stacks_running -= 1
+def rm_nameSpace(nameSpace):
+    #Borra el nameSpace con el nombre dado y obtiene los logs
+    #get_logs_container(
+    #    name_stack=name_stack, url=url,
+    #    access_key=access_key, secret_key=secret_key)
+    global nameSpaces_running
+    os.system('./exec/kubectl delete namespace ' + nameSpace)
+    nameSpaces_running -= 1
 
-def create_nameSpace(nameSpace, url, access_key, secret_key):
+def create_nameSpace(nameSpace):
     #Crea un nameSpace con el nombre dado
     os.system('./exec/kubectl create namespace ' + nameSpace)
 
-def create_service(nameSpace, serviceFile):
+def start_service(nameSpace, serviceFile):
     os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + serviceFile)
 
-def create_replicationController(nameSpace, rcFile):
-    os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + rcFile)
-
-
-
-def start_stack(name_stack, url, access_key, secret_key):
-    #Ejecuta el stack con el nombre dado
-    call([
-        './exec/rancher-compose',
-        '--url', url,
-        '--access-key', access_key,
-        '--secret-key', secret_key,
-        '--env-file', 'answers.txt',
-        '--project-name', name_stack,
-        'start'])
 
 
 
@@ -101,7 +81,23 @@ def get_configuration(configuration, access_key, secret_key):
     content_all = r.json()
     logging.critical('Obtenido el objeto JSON de la API')
 
+    # Obtención de los ficheros de los servicios que hay que arrancar
+    files = content_all['files']
+
+    # En esta parte, se obtienen de la API todos los ficheros que se van a arrancar
+    # Se guardan en la carpeta ./files, que se ha creado antes
+    for file in files:
+        if(file != 'rancher-compose.yml'):
+            name_file = file
+            file_service = open('./files/'+name_file, 'w')
+            file_service.write(str(content_all['files'][name_file]))
+            file_service.close()
+
+
+    return (files,url_rancher, url_catalog)
+
     # Creacion del dockercompose
+    """
     content_dockercompose = str(content_all['files']['docker-compose.yml'])
     logging.critical('docker compose del JSON')
     docker_compose = open('docker-compose.yml', 'w')
@@ -110,12 +106,14 @@ def get_configuration(configuration, access_key, secret_key):
 
     return (url_rancher, url_catalog)
     # getParams(parametros)
+    """
 
-def launch_experiments(url, catalog_name, access_key, secret_key, parametros, parametros_nombre):
+def launch_experiments(files, catalog_name, parametros, parametros_nombre):
     #Iteracion para lanzar las combinaciones entre los parametros de entrada
-    global stacks_running
+    global nameSpaces_running
     cont = 0
     threads = []
+    # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
         #Escritura del fichero de respuestas
         # TODO: Context manager -> with statement
@@ -125,29 +123,24 @@ def launch_experiments(url, catalog_name, access_key, secret_key, parametros, pa
             logging.critical(parametros_nombre[j]+'='+str(param[j])+'\n')
         answers.close()
 
-        project_name = ''.join([catalog_name,'Model{num}'.format(num=cont)])
+        nameSpace = ''.join([catalog_name,'Model{num}'.format(num=cont)])
         # project_name = 'Model{num}'.format(num=cont)
-        logging.critical('Preparado para lanzar stacks')
+        logging.critical('Preparado para lanzar nameSpaces')
 
-        while(stacks_running>=stack_limit):
+        while(nameSpaces_running>=nameSpaces_limit):
             continue
 
-        #Llamadas a rancher-compose
-        create_stack(
-            name_stack=project_name,
-            url=url,
-            access_key=access_key,
-            secret_key=secret_key)
-        start_stack(
-            name_stack=project_name,
-            url=url,
-            access_key=access_key,
-            secret_key=secret_key)
+        #Llamadas a kubectl
+        # Se crea un nameSpace por cada combinacion
+        create_nameSpace(nameSpace)
+        # Por cada fichero en ./files, se lanza un start_service dentro de un nameSpace
+        for file in files:
+            start_service(nameSpace,file)
 
-        threads.append(threading.Timer(time_out, rm_stack, args=[project_name, url, access_key, secret_key]))
+        threads.append(threading.Timer(time_stop, rm_nameSpace, args=[nameSpace]))
         threads[cont].start()
 
-        stacks_running += 1
+        nameSpaces_running += 1
         cont = cont + 1
 
 def get_logs_container(name_stack, url, access_key, secret_key):
@@ -199,11 +192,15 @@ logging.critical('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
 
 parametros_nombre=[] # Prescindible?
 parametros = [] # Prescindible?
-stacks_running = 0
-# sincronizacion = threading.Semaphore(value=stack_limit)
+nameSpaces_running = 0
+# sincronizacion = threading.Semaphore(value=nameSpaces_limit)
 if(os.path.isdir('./logs')):
     call(['rm','-rf','./logs'])
 os.mkdir("./logs")
+
+if(os.path.isdir('./files')):
+    call(['rm','-rf','./files'])
+os.mkdir("./files")
 
 # TODO: Add argparse
 #Lectura de parametros para las url y las keys
@@ -218,20 +215,22 @@ entradas = requests.get(url=url_entradas, verify=False)
 entradas = yaml.load(entradas.text)
 logging.critical('Obtenido el fichero de configuracion para los parametros')
 
-# Obtenemos parametros time_out y stack_limit que son globales para todos los stacks
-time_out = entradas["time_stop"]
-stack_limit = entradas["limit_stacks"]
+# Obtenemos parametros time_stop y nameSpaces_limit que son globales para todos los stacks
+time_stop = entradas["time_stop"]
+nameSpaces_limit = entradas["limit_nameSpaces"]
 
-catalogs_nombre = [catalog for catalog in entradas["stacks_catalog"]][::-1]
+catalogs_nombre = [catalog for catalog in entradas["catalogs"]][::-1]
 logging.critical(catalogs_nombre)
 for catalog in catalogs_nombre:
     logging.critical(catalog)
-    url, url_catalog = get_configuration(configuration=entradas["stacks_catalog"][catalog], access_key=access_key, secret_key=secret_key)
-    parametros_nombre, parametros = get_params(entradas["stacks_catalog"][catalog]['PARAMS'])
+    files, url, url_catalog = get_configuration(configuration=entradas["catalogs"][catalog], access_key=access_key, secret_key=secret_key)
+    parametros_nombre, parametros = get_params(entradas["catalogs"][catalog]['PARAMS'])
     launch_experiments(
-            url=url,
-            access_key=access_key,
-            secret_key=secret_key,
+            files=files,
             catalog_name=catalog,
             parametros=parametros,
             parametros_nombre=parametros_nombre)
+
+
+
+
