@@ -18,7 +18,9 @@ spec:
         service: impresion-params
     spec:
       containers:
-      - command: "sh"
+      -
+        command:
+        - "sh"
         args:
         - -c
         - echo ${PARAM1} ${PARAM2}; sleep 1000
