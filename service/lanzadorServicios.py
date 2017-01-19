@@ -9,8 +9,8 @@ import yaml
 import numpy
 import logging
 import os
+import fileinput
 
-# TODO: Add an argeparser
 # import argparse or click
 # TODO: Set up del logger en condiciones. Ahora todo esta a critical. Puede que
 # interese que escriba en algun lado
@@ -32,7 +32,8 @@ def create_nameSpace(nameSpace):
     nameSpaces_running += 1
 
 def start_service(nameSpace, serviceFile):
-    os.system('./exec/kubectl --namespace= ' + nameSpace + 'create -f ' + serviceFile)
+    logging.critical('Lanzando servicio ' + serviceFile + ' en el nameSpace ' + nameSpace)
+    os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + serviceFile)
 
 def get_params(parametros_yml):
     #Obtiene los parametros para un stack del catalogo
@@ -87,23 +88,11 @@ def get_configuration(configuration, access_key, secret_key):
     for file in files:
         if(file != 'rancher-compose.yml'):
             name_file = file
-            file_service = open('./files/' + name_file, 'w')
-            file_service.write(str(content_all['files'][name_file]))
-            file_service.close()
+            with open('./files/' + name_file, 'w') as file_service:
+                file_service.write(str(content_all['files'][name_file]))
 
-    return (files,url_rancher, url_catalog)
+    return (files, url_rancher, url_catalog)
 
-    # Creacion del dockercompose
-    """
-    content_dockercompose = str(content_all['files']['docker-compose.yml'])
-    logging.critical('docker compose del JSON')
-    docker_compose = open('docker-compose.yml', 'w')
-    docker_compose.write(content_dockercompose)
-    docker_compose.close()
-
-    return (url_rancher, url_catalog)
-    # getParams(parametros)
-    """
 
 def configurate_kubectl (rancher_url, access_key, secret_key):
     # TODO: Dejar configurable los parametros que llevan el nombre ml-kube
@@ -111,18 +100,18 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
 
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
     basepath = os.path.dirname(__file__) # __file__ es lo mismo que sys.argv[0]
-    # TODO: Comprobar cual es la ruta relativa a kubectl
-    filepath = os.path.abspath(os.path.join(basepath, "..", "..", "..", "root/.kube/config"))
+    # TODO: Comprobar cual es la ruta relativa a kubectl -> "..", "..", "..", "root/.kube/config"
+    filepath = os.path.abspath(os.path.join(basepath, "..","..","..", ".kube/config"))
 
     # Obtenemos la plantilla para el config
     with open('config', 'r') as f:
         t = f.read()
-        kubeConfig = yaml.load(text)
+        kubeConfig = yaml.load(t)
 
     # rancher_url = https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
     kubeConfig['clusters'][0]['cluster']['server'] = rancher_url
     kubeConfig['users'][0]['user']['username'] = access_key
-    kubeConfig['users'][0]['user']['username'] = secret_key
+    kubeConfig['users'][0]['user']['password'] = secret_key
 
     with open(filepath, 'w') as f:
         yaml.dump(kubeConfig, f)
@@ -135,16 +124,25 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
     threads = []
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
-        #Escritura del fichero de respuestas
-        # TODO: Context manager -> with statement
-        answers = open('answers.txt', 'w')
-        for j in range(len(parametros_nombre)):
-            answers.write(parametros_nombre[j] + '=' + str(param[j])+'\n')
-            logging.critical(parametros_nombre[j] + '=' + str(param[j])+'\n')
-        answers.close()
+        #Substitucion de las variables en los ficheros
+        # TODO: Check -> Los nombres de los paramentros deben ser exactamente los mismos que en los ficheros. Engorro para configurar
 
-        nameSpace = ''.join([catalog_name,'Model{num}'.format(num=cont)])
-        # project_name = 'Model{num}'.format(num=cont)
+        for index in range(len(parametros_nombre)):
+            logging.critical(parametros_nombre[index] + '=' + str(param[index])+'\n')
+            for file in files:
+                if(file != 'rancher-compose.yml'):
+                    with fileinput.FileInput('./files/' + file, inplace=True, backup='.bak') as file:
+                        for line in file:
+                            print(line.replace('${'+parametros_nombre[index]+'}', str(param[index])), end='')
+
+        # with open('answers.txt', 'w') as answers:
+        #     for j in range(len(parametros_nombre)):
+        #         answers.write(parametros_nombre[j] + '=' + str(param[j])+'\n')
+        #         logging.critical(parametros_nombre[j] + '=' + str(param[j])+'\n')
+
+        # El namespace no admite mayusculas
+        nameSpace = ''.join([catalog_name,'model{num}'.format(num=cont)])
+
         logging.critical('Preparado para lanzar nameSpaces')
 
         while(nameSpaces_running>=nameSpaces_limit):
@@ -155,9 +153,10 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
         create_nameSpace(nameSpace)
         # Por cada fichero en ./files, se lanza un start_service dentro de un nameSpace
         for file in files:
-            start_service(nameSpace,file)
+            if(file != 'rancher-compose.yml'):
+                start_service(nameSpace, './files/' + file)
 
-        threads.append(threading.Timer(time_stop, rm_nameSpace, args=[nameSpace]))
+        threads.append(threading.Timer(time_out, rm_nameSpace, args=[nameSpace]))
         threads[cont].start()
 
         nameSpaces_running += 1
@@ -191,21 +190,22 @@ entradas = requests.get(url=url_entradas, verify=False)
 entradas = yaml.load(entradas.text)
 logging.critical('Obtenido el fichero de configuracion para los parametros')
 
-# Obtenemos parametros time_stop y nameSpaces_limit que son globales para todos los stacks
-time_stop = entradas["time_stop"]
+# Obtenemos parametros time_out y nameSpaces_limit que son globales para todos los stacks
+time_out = entradas["time_out"]
 nameSpaces_limit = entradas["limit_nameSpaces"]
 
-catalogs_nombre = [catalog for catalog in entradas["catalogs"]][::-1]
+catalogs_nombre = [catalog for catalog in entradas["catalog_services"]][::-1]
 logging.critical(catalogs_nombre)
 
 for catalog in catalogs_nombre:
     logging.critical(catalog)
     files, url, url_catalog = get_configuration(
-            configuration=entradas["catalogs"][catalog],
+            configuration=entradas["catalog_services"][catalog],
             access_key=access_key,
             secret_key=secret_key)
-    configurate_kubectl()
-    parametros_nombre, parametros = get_params(entradas["catalogs"][catalog]['PARAMS'])
+    configurate_kubectl(rancher_url=url, access_key=access_key, secret_key=secret_key)
+    os.system('./exec/kubectl version')
+    parametros_nombre, parametros = get_params(entradas["catalog_services"][catalog]['PARAMS'])
     launch_experiments(
             files=files,
             catalog_name=catalog,
@@ -255,3 +255,14 @@ for catalog in catalogs_nombre:
 #         file_logs = ''.join(['./logs/',name_stack,'.txt'])
 #         with open(file_logs,"w") as file:
 #             file.write(service_logs)
+    # Creacion del dockercompose
+    """
+    content_dockercompose = str(content_all['files']['docker-compose.yml'])
+    logging.critical('docker compose del JSON')
+    docker_compose = open('docker-compose.yml', 'w')
+    docker_compose.write(content_dockercompose)
+    docker_compose.close()
+
+    return (url_rancher, url_catalog)
+    # getParams(parametros)
+    """

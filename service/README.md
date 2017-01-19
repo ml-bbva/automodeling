@@ -1,4 +1,4 @@
-<!-- README FOR DOCKER HUB -->
+<!-- README FOR DOCKER HUB TODO: Actualizar para kubernetes-->
 #ML-MODELING
 
 This is a image used in the ml-modeling tasks. This images will launch several experiments in rancher for a catalog template with different configurations. It is based in the oficial python 3.5.2 image
@@ -18,5 +18,3 @@ Then you will need the following things:
 4. Url del rancher:
 5. Url del stack del catalogo de rancher a lanzar. Esta url hace referencia a la API de rancher. Tendremos que buscar en esta el stack que queremos lanzar en la API. Tendrá la siguiente forma:
 `http://url_de_ejemlo_donde_este_tu_rancher/v1-catalog/templates/nombre_del_catalogo:nobre_del_servicio:0`
-
-<!-- TODO: Completar este readme. No es importante por ahora. -->

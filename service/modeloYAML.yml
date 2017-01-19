@@ -1,6 +1,6 @@
-time_stop: 30.0
-limit_stacks: 4
-stacks_catalog:
+time_out: 30.0
+limit_nameSpaces: 4
+catalog_services:
   CATALOG1:
     URL_API: http://185.24.5.196:8080/v1-catalog/templates/testCatalogML:TestCatalog:0
     URL_RANCHER:
