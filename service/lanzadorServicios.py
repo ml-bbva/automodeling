@@ -125,7 +125,10 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
         #Substitucion de las variables en los ficheros
-        # TODO: Check -> Los nombres de los paramentros deben ser exactamente los mismos que en los ficheros. Engorro para configurar
+        # TODO: Check -> Los nombres de los paramentros deben ser exactamente los mismos que en los ficheros. Engorro para configura
+
+        # TODO: Format string with ${} in python. Need a dictionary: parametros_nombre:param
+        # TODO: Set always the NAMESPACE even if there is no parameter for it
 
         for index in range(len(parametros_nombre)):
             logging.critical(parametros_nombre[index] + '=' + str(param[index])+'\n')
@@ -134,11 +137,8 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
                     with fileinput.FileInput('./files/' + file, inplace=True, backup='.bak') as file:
                         for line in file:
                             print(line.replace('${'+parametros_nombre[index]+'}', str(param[index])), end='')
+                            print(line.replace('${' + 'NAMESPACE' + '}', str(param[index])), end='')
 
-        # with open('answers.txt', 'w') as answers:
-        #     for j in range(len(parametros_nombre)):
-        #         answers.write(parametros_nombre[j] + '=' + str(param[j])+'\n')
-        #         logging.critical(parametros_nombre[j] + '=' + str(param[j])+'\n')
 
         # El namespace no admite mayusculas
         nameSpace = ''.join([catalog_name,'model{num}'.format(num=cont)])

@@ -3,15 +3,15 @@
     version: "v0.1"
     description: "Lanzador de experimentos para diferentes configuraciones de varios stacks del catalogo."
     questions:
-        - variable: ACCESS_KEY
+        - variable: "access_key"
           label: "Acces key para acceder a rancher"
           required: true
           type: "string"
-        - variable: SECRET_KEY
+        - variable: "secret_key"
           label: "Secret key para el acceso a reancher"
           required: true
           type: "string"
-        - variable: URL_ENTRADAS
+        - variable: "url_entradas"
           label: "Url donde se encuentra el archivo donde leer la lista de parametros."
           required: true
           type: "string"

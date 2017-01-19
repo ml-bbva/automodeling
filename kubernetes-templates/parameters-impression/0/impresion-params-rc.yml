@@ -21,7 +21,7 @@ spec:
       - entrypoint: "sh"
         args:
         - -c
-        - echo $$PARAM1 $$PARAM2; sleep 1000
+        - echo ${PARAM1} ${PARAM2}; sleep 1000
         env:
         - name: NAMESPACE
           value: ${NAMESPACE}

@@ -1,0 +1,13 @@
+.catalog:
+    name: "parameters-impression"
+    version: "v0.1"
+    description: "Impression of two parameters."
+    questions:
+        - variable: "PARAM1"
+          label: "First Parameter"
+          required: true
+          type: "string"
+        - variable: "PARAM2"
+          label: "Second Parameter"
+          required: true
+          type: "string"
