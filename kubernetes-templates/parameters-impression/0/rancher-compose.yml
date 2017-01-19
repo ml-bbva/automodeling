@@ -11,3 +11,7 @@
           label: "Second Parameter"
           required: true
           type: "string"
+        - variable: "NAMESPACE"
+          label: "Namespace where launch this"
+          required: true
+          type: "string"
