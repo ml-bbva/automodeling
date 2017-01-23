@@ -27,7 +27,36 @@ spec:
         env:
         - name: NAMESPACE
           value: ${NAMESPACE}
-        image: verb/socat:alpine
+        image: alpine
         imagePullPolicy: ""
         name: impresion-params
       restartPolicy: Always
+
+
+
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+      app: impresion-params
+  name: "impresion-test"
+  namespace: "experiment1"
+spec:
+  replicas: 1
+  selector:
+    app: impresion-params
+  template:
+    metadata:
+      labels:
+        app: impresion-params
+    spec:
+      restartPolicy: Always
+      containers:
+      - image: "alpine"
+        name: "testing"
+        command:
+          - sh
+        args:
+          - -c
+          - echo HOLA QUE TAL; sleep 60

@@ -12,65 +12,90 @@ import os
 import fileinput
 
 # import argparse or click
-# TODO: Set up del logger en condiciones. Ahora todo esta a critical. Puede que
-# interese que escriba en algun lado
-# logger = logging.getLogger('services_launcher')
+# TO SEE DEBUG AND INFO: --log=
+# https://docs.python.org/3/howto/logging.html
+# TODO: configure flags for logger (argparse?)
+# TODO: create docstrings
 
-def rm_nameSpace(nameSpace):
-    #Borra el nameSpace con el nombre dado y obtiene los logs
-    #get_logs_container(
-    #    name_stack=name_stack, url=url,
-    #    access_key=access_key, secret_key=secret_key)
-    global nameSpaces_running
-    os.system('./exec/kubectl delete namespace ' + nameSpace)
-    nameSpaces_running -= 1
+# LOGGER CONFIG
+logger = logging.getLogger('AUTOMODELING')
+logger.setLevel(logging.DEBUG)
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter('%(name)s:%(levelname)s\t%(message)s')
+# add formatter to ch
+ch.setFormatter(formatter)
+# add ch to logger
+logger.addHandler(ch)
 
-def create_nameSpace(nameSpace):
-    #Crea un nameSpace con el nombre dado
-    global nameSpaces_running
-    os.system('./exec/kubectl create namespace ' + nameSpace)
-    nameSpaces_running += 1
 
-def start_service(nameSpace, serviceFile):
-    logging.critical('Lanzando servicio ' + serviceFile + ' en el nameSpace ' + nameSpace)
-    os.system('./exec/kubectl --namespace=' + nameSpace + ' create -f ' + serviceFile)
+def rm_namespace(namespace):
+    # Borra el namespace con el nombre dado y su contenido
+
+    global namespaces_running
+    # Delete namespace content
+    os.system(
+        './kubectl delete ' +
+        '--all service,rc,ingress,pod --namespace=' +
+        namespace
+    )
+    # Delete the namespace itself
+    os.system('./exec/kubectl delete namespace ' + namespace)
+    namespaces_running -= 1
+
+
+def create_namespace(namespace):
+    # Crea un namespace con el nombre dado
+    global namespaces_running
+    os.system('./exec/kubectl create namespace ' + namespace)
+    namespaces_running += 1
+
+
+def start_service(namespace, serviceFile):
+    logger.info('Lanzando servicio ' + serviceFile + ' en el namespace ' + namespace)
+    os.system('./exec/kubectl --namespace=' + namespace + ' create -f ' + serviceFile)
+
 
 def get_params(parametros_yml):
-    #Obtiene los parametros para un stack del catalogo
-    parametros_nombre=[]
-    parametros=[]
-    logging.critical(parametros_yml)
-    #Las distintas formas que se consideran son: parametroNombre->n
-    #1. [valorInicial:valorFinal:Salto] -> Lineal
-    #2. TODO: [valorInicial:valorFinal:Función] -> Otro tipo de funcion
-    #3. [un String]
+    # Obtiene los parametros para un stack del catalogo
+    parametros_nombre = []
+    parametros = []
+    logger.info(parametros_yml)
+    # Las distintas formas que se consideran son: parametroNombre->n
+    # 1. [valorInicial:valorFinal:Salto] -> Lineal
+    # 2. TODO: [valorInicial:valorFinal:Función] -> Otro tipo de funcion
+    # 3. [un String]
     for parametro in parametros_yml:
-        logging.critical(parametro)
+        logger.info(parametro)
         parametros_nombre.append(parametro)
-        opcion = parametros_yml[parametro]['type'] #parametro[parametro.index("{"):parametro.index("}")]
-        if(opcion=='lineal'):
+        opcion = parametros_yml[parametro]['type']
+        # parametro[parametro.index("{"):parametro.index("}")]
+        if(opcion == 'lineal'):
             valorInicial = parametros_yml[parametro]['initial-value']
             valorFinal = parametros_yml[parametro]["final-value"]
             valorSalto = parametros_yml[parametro]["interval"]
             opcionesParametro = numpy.arange(valorInicial, valorFinal, valorSalto)
             parametros.append(opcionesParametro.tolist())
-        elif(opcion==2):
-            #opcionesParametro
+        elif(opcion == 2):
+            # opcionesParametro
             pass
-        elif(opcion=="absolute"):
+        elif(opcion == "absolute"):
             parametros.append(parametros_yml[parametro]["param"])
         else:
-            logging.critical('ERROR: FORMATO DE PARAMETROS INCORRECTO')
+            logger.critical('ERROR: FORMATO DE PARAMETROS INCORRECTO')
             raise SyntaxError('Parametros en el yml de entradas incorectos')
 
     parametros_nombre = parametros_nombre[::-1]
     parametros = parametros[::-1]
-    logging.critical('Obtenida la lista de posibles parametros')
+    logger.info('Obtenida la lista de posibles parametros')
 
     return (parametros_nombre, parametros)
 
+
 def get_configuration(configuration, access_key, secret_key):
-    #Extrae de un yaml toda la configuracion para el lanzador de stacks y la organiza
+    # Extrae de un yaml toda la configuracion para el lanzador de stacks y la organiza
 
     # Peticion a la API para obtener el dockercompose
     url_catalog = configuration["URL_API"]
@@ -78,7 +103,7 @@ def get_configuration(configuration, access_key, secret_key):
     auth = requests.auth.HTTPBasicAuth(access_key, secret_key)
     r = requests.get(url=url_catalog, auth=auth)
     content_all = r.json()
-    logging.critical('Obtenido el objeto JSON de la API')
+    logger.info('Obtenido el objeto JSON de la API')
 
     # Obtención de los ficheros de los servicios que hay que arrancar
     files = content_all['files']
@@ -96,17 +121,23 @@ def get_configuration(configuration, access_key, secret_key):
 
 def configurate_kubectl (rancher_url, access_key, secret_key):
     # TODO: Dejar configurable los parametros que llevan el nombre ml-kube
+
     # Configuramos kubectl
+    logger.info('Empezamos a configurar kubectl')
 
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
-    basepath = os.path.dirname(__file__) # __file__ es lo mismo que sys.argv[0]
-    # TODO: Comprobar cual es la ruta relativa a kubectl -> "..", "..", "..", "root/.kube/config"
-    filepath = os.path.abspath(os.path.join(basepath, "..","..","..", ".kube/config"))
+    # TODO: Comprobar cual es la ruta relativa a kubectl en el container
+    #       -> "..", "..", "..", "root/.kube/config"
+    # __file__ es lo mismo que sys.argv[0]
+    basepath = os.path.dirname(__file__)
+    filepath = os.path.abspath(
+                    os.path.join(basepath, "..", "..", "..", ".kube/config"))
 
+    logger.debug('Ruta en la que se encuentra el archivo')
     # Obtenemos la plantilla para el config
     with open('config', 'r') as f:
-        t = f.read()
-        kubeConfig = yaml.load(t)
+        text = f.read()
+        kubeConfig = yaml.load(text)
 
     # rancher_url = https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
     kubeConfig['clusters'][0]['cluster']['server'] = rancher_url
@@ -118,87 +149,94 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
 
 
 def launch_experiments(files, catalog_name, parametros, parametros_nombre):
-    #Iteracion para lanzar las combinaciones entre los parametros de entrada
-    global nameSpaces_running
+    # Iteracion para lanzar las combinaciones entre los parametros de entrada
+    global namespaces_running
     cont = 0
     threads = []
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
-        #Substitucion de las variables en los ficheros
-        # TODO: Check -> Los nombres de los paramentros deben ser exactamente los mismos que en los ficheros. Engorro para configura
-
-        # TODO: Format string with ${} in python. Need a dictionary: parametros_nombre:param
-        # TODO: Set always the NAMESPACE even if there is no parameter for it
-
-        for index in range(len(parametros_nombre)):
-            logging.critical(parametros_nombre[index] + '=' + str(param[index])+'\n')
-            for file in files:
-                if(file != 'rancher-compose.yml'):
-                    with fileinput.FileInput('./files/' + file, inplace=True, backup='.bak') as file:
-                        for line in file:
-                            print(line.replace('${'+parametros_nombre[index]+'}', str(param[index])), end='')
-                            print(line.replace('${' + 'NAMESPACE' + '}', str(param[index])), end='')
-
+        # Substitucion de las variables en los ficheros
+        # Check -> Los nombres de los paramentros deben ser exactamente
+        #          los mismos que en los ficheros.
 
         # El namespace no admite mayusculas
-        nameSpace = ''.join([catalog_name,'model{num}'.format(num=cont)])
+        namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
+        if not os.path.exists(namespace_dir):
+            os.makedirs(namespace_dir)
+        for file_name in files:
+            if(file_name != 'rancher-compose.yml'):
+                with open('./files/' + file_name, 'r') as f:
+                    text = f.read()
+                for index in range(len(parametros_nombre)):
+                    logger.info(
+                        parametros_nombre[index] + '=' +
+                        str(param[index]) + '\n')
+                    text = text.replace(
+                        '${' + parametros_nombre[index] + '}',
+                        str(param[index]))
+                # If there is not a Namespace in the paremetres it's set by default
+                text = text.replace(
+                    '${' + 'NAMESPACE' + '}',
+                    namespace)
+                with open('./files/' + file_name, 'w') as f:
+                    f.write(text)
 
-        logging.critical('Preparado para lanzar nameSpaces')
+        logger.info('Preparado para lanzar namespaces')
 
-        while(nameSpaces_running>=nameSpaces_limit):
+        while(namespaces_running >= namespaces_limit):
             continue
 
-        #Llamadas a kubectl
-        # Se crea un nameSpace por cada combinacion
-        create_nameSpace(nameSpace)
-        # Por cada fichero en ./files, se lanza un start_service dentro de un nameSpace
+        # Llamadas a kubectl
+        # Se crea un namespace por cada combinacion
+        create_namespace(namespace)
+        # Por cada fichero en ./files, se lanza un start_service dentro de un namespace
         for file in files:
             if(file != 'rancher-compose.yml'):
-                start_service(nameSpace, './files/' + file)
+                start_service(namespace, './files/' + file)
 
-        threads.append(threading.Timer(time_out, rm_nameSpace, args=[nameSpace]))
+        threads.append(threading.Timer(time_out, rm_namespace, args=[namespace]))
         threads[cont].start()
 
-        nameSpaces_running += 1
+        namespaces_running += 1
         cont = cont + 1
 
 
-logging.critical('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
+logger.info('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
 
-parametros_nombre=[] # Prescindible?
-parametros = [] # Prescindible?
-nameSpaces_running = 0
-# sincronizacion = threading.Semaphore(value=nameSpaces_limit)
+parametros_nombre = []  # Prescindible?
+parametros = []  # Prescindible?
+namespaces_running = 0
+
 if(os.path.isdir('./logs')):
-    call(['rm','-rf','./logs'])
+    call(['rm', '-rf', './logs'])
 os.mkdir("./logs")
 
 if(os.path.isdir('./files')):
-    call(['rm','-rf','./files'])
+    call(['rm', '-rf', './files'])
 os.mkdir("./files")
 
 # TODO: Add argparse
-#Lectura de parametros para las url y las keys
+# Lectura de parametros para las url y las keys
 url_entradas = str(sys.argv[1])
-logging.critical('url de las entradas:' + url_entradas)
+logger.info('url de las entradas:' + url_entradas)
 access_key = str(sys.argv[2])
-logging.critical('access key:' + access_key)
+logger.info('access key:' + access_key)
 secret_key = str(sys.argv[3])
-logging.critical('secret key:' + secret_key)
+logger.info('secret key:' + secret_key)
 
 entradas = requests.get(url=url_entradas, verify=False)
 entradas = yaml.load(entradas.text)
-logging.critical('Obtenido el fichero de configuracion para los parametros')
+logger.info('Obtenido el fichero de configuracion para los parametros')
 
-# Obtenemos parametros time_out y nameSpaces_limit que son globales para todos los stacks
+# Obtenemos parametros time_out y namespaces_limit que son globales para todos los stacks
 time_out = entradas["time_out"]
-nameSpaces_limit = entradas["limit_nameSpaces"]
+namespaces_limit = entradas["limit_namespaces"]
 
 catalogs_nombre = [catalog for catalog in entradas["catalog_services"]][::-1]
-logging.critical(catalogs_nombre)
+logger.info(catalogs_nombre)
 
 for catalog in catalogs_nombre:
-    logging.critical(catalog)
+    logger.info(catalog)
     files, url, url_catalog = get_configuration(
             configuration=entradas["catalog_services"][catalog],
             access_key=access_key,
@@ -215,7 +253,7 @@ for catalog in catalogs_nombre:
 
 # def get_logs_container(name_stack, url, access_key, secret_key):
 #     #Obtiene los logs de un experimento dado
-#     logging.critical('Obteniendo logs para'+name_stack)
+#     logger.info('Obteniendo logs para'+name_stack)
 #     llamadaInspect = Popen(
 #         ['./exec/rancher',
 #         '--url', url,
@@ -223,18 +261,18 @@ for catalog in catalogs_nombre:
 #         '--secret-key', secret_key,
 #         'inspect',name_stack],
 #         stdout=PIPE)
-#     logging.critical('Obteniendo serviceIds')
+#     logger.info('Obteniendo serviceIds')
 #     (out, err) = llamadaInspect.communicate()
 #     if err:
-#         logging.critical('ERROR EN LA LLAMADA A RANCHER INSPECT')
+#         logger.info('ERROR EN LA LLAMADA A RANCHER INSPECT')
 #         raise SyntaxError('Parametros en el yml de entradas incorectos')
 #     else:
-#         logging.critical('Llamada a rancher inspect correcta')
+#         logger.info('Llamada a rancher inspect correcta')
 #
 #     info_stack = json.loads(out.decode('utf-8'))
 #
 #     for service in info_stack['serviceIds']:
-#         logging.critical('Logs del servicio'+service)
+#         logger.info('Logs del servicio'+service)
 #         llamadaLogs = Popen(
 #             ['./exec/rancher',
 #             '--url', url,
@@ -242,15 +280,15 @@ for catalog in catalogs_nombre:
 #             '--secret-key', secret_key,
 #             'logs',service],
 #             stdout=PIPE)
-#         logging.critical('Obteniendo serviceIds')
+#         logger.info('Obteniendo serviceIds')
 #         (out, err) = llamadaLogs.communicate()
 #         if err:
 #             logging.critical('ERROR EN LA LLAMADA A RANCHER LOGS')
 #             raise SyntaxError('Parametros en el yml de entradas incorectos')
 #         else:
-#             logging.critical('Llamada a rancher logs correcta')
+#             logger.info('Llamada a rancher logs correcta')
 #         service_logs = out.decode('utf-8')
-#         # TODO: Decidir que hacer con los logs
+#         # TO DO: Decidir que hacer con los logs
 #         print(service_logs)
 #         file_logs = ''.join(['./logs/',name_stack,'.txt'])
 #         with open(file_logs,"w") as file:
@@ -258,7 +296,7 @@ for catalog in catalogs_nombre:
     # Creacion del dockercompose
     """
     content_dockercompose = str(content_all['files']['docker-compose.yml'])
-    logging.critical('docker compose del JSON')
+    logger.info('docker compose del JSON')
     docker_compose = open('docker-compose.yml', 'w')
     docker_compose.write(content_dockercompose)
     docker_compose.close()

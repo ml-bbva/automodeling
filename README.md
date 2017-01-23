@@ -1,4 +1,4 @@
-<!-- README FO GIT HUB TODO: Actualizar para kubernetes -->
+<!-- README FO GIT HUB TODO: Actualizar para kubernetes TODO: Translate to english -->
 # Lanzador de Stacks
 
 Este proyecto servirá para las tareas de ml-modeling. El objetivo actual es lanzar varias instancias de varios stacks registrados en el catalogo de rancher con diferentes configuraciones que se darán mediante una lista.
