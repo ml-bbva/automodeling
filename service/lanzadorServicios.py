@@ -132,12 +132,13 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
     basepath = os.path.dirname(__file__)
     #filepath = os.path.abspath(
     #                os.path.join(basepath, "..", "..", "..", ".kube/config"))
-    filepath = os.path.abspath(os.path.join("/home/ignacio",".kube/config"))
+    filepath = "/home/ignacio/.kube/config"
 
     logger.debug('Ruta en la que se encuentra el archivo')
     # Obtenemos la plantilla para el config
-    with open('config', 'r') as f:
+    with open(filepath, 'r') as f:
         text = f.read()
+        logger.debug(text)
         kubeConfig = yaml.load(text)
 
     # rancher_url = https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
@@ -147,6 +148,10 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
 
     with open(filepath, 'w') as f:
         yaml.dump(kubeConfig, f)
+
+    #os.system("--------------------PODS DE RANCHER--------------------------")
+    os.system("kubectl get pods")
+    #os.system("-------------------------------------------------------------")
 
 
 def launch_experiments(files, catalog_name, parametros, parametros_nombre):
