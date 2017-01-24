@@ -22,7 +22,7 @@ spec:
         - "sh"
         args:
         - -c
-        - python ${url_entradas} ${access_key} ${secret_key}; sleep infinity
+        - python "${url_entradas}" ${access_key} ${secret_key}; sleep infinity
         image: automodeling/automodeling:latest
         imagePullPolicy: Always
         name: experiment-launcher
