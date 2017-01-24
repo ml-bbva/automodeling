@@ -55,6 +55,7 @@ def create_namespace(namespace):
 
 def start_service(namespace, serviceFile):
     logger.info('Lanzando servicio ' + serviceFile + ' en el namespace ' + namespace)
+    os.system("cat " + serviceFile)
     os.system('./exec/kubectl --namespace=' + namespace + ' create -f ' + serviceFile)
 
 
@@ -150,7 +151,7 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
         yaml.dump(kubeConfig, f)
 
     #os.system("--------------------PODS DE RANCHER--------------------------")
-    os.system("kubectl get pods")
+    #os.system("kubectl get pods")
     #os.system("-------------------------------------------------------------")
 
 
