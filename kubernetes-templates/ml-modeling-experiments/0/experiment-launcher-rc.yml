@@ -26,4 +26,3 @@ spec:
         image: automodeling/automodeling:latest
         imagePullPolicy: Always
         name: experiment-launcher
-      restartPolicy: Never

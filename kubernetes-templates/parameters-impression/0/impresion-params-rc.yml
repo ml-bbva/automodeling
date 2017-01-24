@@ -30,4 +30,3 @@ spec:
         image: alpine
         imagePullPolicy: ""
         name: impresion-params
-      restartPolicy: Never
