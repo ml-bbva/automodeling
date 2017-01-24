@@ -130,8 +130,9 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
     #       -> "..", "..", "..", "root/.kube/config"
     # __file__ es lo mismo que sys.argv[0]
     basepath = os.path.dirname(__file__)
-    filepath = os.path.abspath(
-                    os.path.join(basepath, "..", "..", "..", ".kube/config"))
+    #filepath = os.path.abspath(
+    #                os.path.join(basepath, "..", "..", "..", ".kube/config"))
+    filepath = os.path.abspath(os.path.join("/home/ignacio",".kube/config"))
 
     logger.debug('Ruta en la que se encuentra el archivo')
     # Obtenemos la plantilla para el config
@@ -161,8 +162,7 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
 
         # El namespace no admite mayusculas
         namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
-        if not os.path.exists(namespace_dir):
-            os.makedirs(namespace_dir)
+        
         for file_name in files:
             if(file_name != 'rancher-compose.yml'):
                 with open('./files/' + file_name, 'r') as f:
@@ -227,6 +227,7 @@ logger.info('secret key:' + secret_key)
 entradas = requests.get(url=url_entradas, verify=False)
 entradas = yaml.load(entradas.text)
 logger.info('Obtenido el fichero de configuracion para los parametros')
+print (entradas)
 
 # Obtenemos parametros time_out y namespaces_limit que son globales para todos los stacks
 time_out = entradas["time_out"]
