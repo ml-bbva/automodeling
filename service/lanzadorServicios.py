@@ -168,7 +168,7 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
 
         # El namespace no admite mayusculas
         namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
-        
+
         for file_name in files:
             if(file_name != 'rancher-compose.yml'):
                 with open('./files/' + file_name, 'r') as f:
@@ -184,7 +184,7 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
                 text = text.replace(
                     '${' + 'NAMESPACE' + '}',
                     namespace)
-                with open('./files/' + file_name, 'w') as f:
+                with open('./files/launch/' + file_name, 'w') as f:
                     f.write(text)
 
         logger.info('Preparado para lanzar namespaces')
@@ -198,7 +198,7 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
         # Por cada fichero en ./files, se lanza un start_service dentro de un namespace
         for file in files:
             if(file != 'rancher-compose.yml'):
-                start_service(namespace, './files/' + file)
+                start_service(namespace, './files/launch' + file)
 
         threads.append(threading.Timer(time_out, rm_namespace, args=[namespace]))
         threads[cont].start()
@@ -220,6 +220,10 @@ os.mkdir("./logs")
 if(os.path.isdir('./files')):
     call(['rm', '-rf', './files'])
 os.mkdir("./files")
+
+if(os.path.isdir('./files/launch')):
+    call(['rm', '-rf', './files/launch'])
+os.mkdir("./files/launch")
 
 # TODO: Add argparse
 # Lectura de parametros para las url y las keys
