@@ -198,7 +198,7 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
         # Por cada fichero en ./files, se lanza un start_service dentro de un namespace
         for file in files:
             if(file != 'rancher-compose.yml'):
-                start_service(namespace, './files/launch' + file)
+                start_service(namespace, './files/launch/' + file)
 
         threads.append(threading.Timer(time_out, rm_namespace, args=[namespace]))
         threads[cont].start()
