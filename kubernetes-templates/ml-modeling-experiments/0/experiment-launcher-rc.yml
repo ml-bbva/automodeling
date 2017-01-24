@@ -22,6 +22,7 @@ spec:
         command:
         - "sh"
         args:
+        - -c
         - python
         - ${url_entradas}
         - ${access_key}
