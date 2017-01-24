@@ -55,7 +55,6 @@ def create_namespace(namespace):
 
 def start_service(namespace, serviceFile):
     logger.info('Lanzando servicio ' + serviceFile + ' en el namespace ' + namespace)
-    os.system("cat " + serviceFile)
     os.system('./exec/kubectl --namespace=' + namespace + ' create -f ' + serviceFile)
 
 
@@ -129,9 +128,10 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
     #       -> "..", "..", "..", "root/.kube/config"
     # __file__ es lo mismo que sys.argv[0]
-    basepath = os.path.dirname(__file__)
+    #basepath = os.path.dirname(__file__)
     #filepath = os.path.abspath(
     #                os.path.join(basepath, "..", "..", "..", ".kube/config"))
+    os.system("cp config /root/.kube/config")
     filepath = "/root/.kube/config"
 
     logger.debug('Ruta en la que se encuentra el archivo')
