@@ -127,13 +127,12 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
     logger.info('Empezamos a configurar kubectl')
 
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
-    # TODO: Comprobar cual es la ruta relativa a kubectl en el container
     #       -> "..", "..", "..", "root/.kube/config"
     # __file__ es lo mismo que sys.argv[0]
     basepath = os.path.dirname(__file__)
     #filepath = os.path.abspath(
     #                os.path.join(basepath, "..", "..", "..", ".kube/config"))
-    filepath = "/home/ignacio/.kube/config"
+    filepath = "/root/.kube/config"
 
     logger.debug('Ruta en la que se encuentra el archivo')
     # Obtenemos la plantilla para el config
