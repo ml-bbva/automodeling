@@ -6,7 +6,6 @@ metadata:
   labels:
     service: experiment-launcher
   name: experiment-launcher
-  namespace: ${NAMESPACE}
 spec:
   replicas: 1
   selector:
@@ -19,14 +18,15 @@ spec:
         service: experiment-launcher
     spec:
       containers:
-      - entrypoint: "sh"
+      -
+        command:
+        - "sh"
         args:
-        - -c
-        - echo $$PARAM1 $$PARAM2; sleep 1000
-        env:
-        - name: NAMESPACE
-          value: ${NAMESPACE}
-        image: verb/socat:alpine
+        - python
+        - ${url_entradas}
+        - ${access_key}
+        - ${secret_key}
+        image: automodeling/automodeling:1.0.0
         imagePullPolicy: ""
         name: experiment-launcher
       restartPolicy: Always
