@@ -1,17 +1,47 @@
 <!-- README FOR RANCHER CATALOG -->
-# Lanzador de stacks
+
+# Automodeling
 
 ### Info:
 
- Esta template lanza en diferentes stacks los otras plantillas del catalogo. 
+ This service deploys automatically services from the kubernetes catalog with diferent combinations especified in a yaml file. The service will launch all the combinations of parameters possible.
 
 ### Usage
 
- Selecciona este stack del catalogo.
- Selecciona la version
- Introduce el parametro en las preguntas:
-- **Url de los parametros de configuración**: una url donde se encuentren los parametros de configuracion para las preguntas del stack sobre el que lanzar los experimentos. Debe estar en formato yaml
-- **Access-key**: clave de acceso de la API de rancher
-- **Secret-key**: clave secreta de la API de rancher
+ It is necessary select properly the parameters in the configuration yaml file. This file has the following format:
+```
+    time_out: 30.0
+ 	limit_stacks: 4
+ 	stacks_catalog:
+ 	  CATALOG1:
+ 	    URL_API: http://your-rancher-url/v1-catalog/templates/your-catalog:kubernetes*your-service:0
+ 	    URL_RANCHER: https://your-rancher-url:80/r/projects/1a8238/kubernetes
+ 	    PARAMS:
+ 	      param1:
+ 	          type: absolute
+ 	          param:
+ 	            - Hello
+ 	            - Good Morning
+ 	      param2:
+ 	          type: lineal
+ 	          initial-value: 0
+ 	          final-value: 4
+ 	          interval: 2
+```
 
-**NOTA IMPORTANTE: Hay que tener en cuenta que las url del rancher y del stack del catalogo tienen que ser accesibles desde nuestro host.**
+You have to specified the following parameters:
+- **time_out**: The time limit for the experiments to run.
+- **limit_stacks**: The limit for the maximun amount of experiments running at the same time.
+- **stacks_catalog**: Here you have to specify the diferent services to launch and the parameters for the services. First you gave a name to the catalog to launch. In this expample we set this as CATALOG1, but it can be anything. Then you specified for that catalog the following parameters:
+    - **URL_API**: This is the url in wich is located the template of the service to launch. You have to seek this url in the Rancher API. It should have this form: `http://your-rancher-url/v1-catalog/templates/your-catalog:kubernetes*your-service:0`
+    - **URL_RANCHER**: This is the url where your rancher is located. In that rancher direction is where the experiments is going to be launched. This should have the following form: `https://your-rancher-url:80/r/projects/1a8238/kubernetes`
+    - **PARAMS**: here you have to specify the parameters for the expermiment to try and launch. Notice that this service will try all the combinations possible between the parameters. Also is very important that the names of this parametres are exactly the same as they are in the service's rancher-compose file. Otherwise it won't work. You can specified diferent two diferent types of parameters. In the example you can see both of these types:
+        - lineal: for lineal increments
+        - absolute: for a concrete values or strings
+
+**IMPORTANT NOTE: The URL_API and de URL_RANCHER has to be accessible from our host.**
+
+This configuration yaml file could be in any source in internet. Then we set the parameters for rancher:
+- **Url entries**: the url where the config file is located
+- **Access-key**: access key for rancher
+- **Secret-key**: secret key for rancher

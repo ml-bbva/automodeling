@@ -1,15 +1,14 @@
 # coding=utf-8
-import json
+# import json
 import sys
 import requests
 import itertools
-from subprocess import call, Popen, PIPE
+# from subprocess import call, Popen, PIPE
 import threading
 import yaml
 import numpy
 import logging
 import os
-import fileinput
 
 # import argparse or click
 # TO SEE DEBUG AND INFO: --log=

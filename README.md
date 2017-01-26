@@ -1,77 +1,72 @@
-<!-- README FO GIT HUB TODO: Actualizar para kubernetes TODO: Translate to english -->
-# Lanzador de Stacks
+<!-- README FO GIT HUB -->
 
-Este proyecto servirá para las tareas de ml-modeling. El objetivo actual es lanzar varias instancias de varios stacks registrados en el catalogo de rancher con diferentes configuraciones que se darán mediante una lista.
+# Automodeling
 
-Este repositorio tiene dos partes diferenciadas:
-* Carpeta service: donde se aloja el script de python y su correspondiente dockerizacion.
-* Carpeta templates: la carpeta que añadirá este proyecto como stack del catalogo de rancher para que se pueda lanzar desde ahi.
+This project aim to achive automodeling for neural networks. The current goal is launch several instances of a service in Rancher from the catalog with diferents configurations to try which is the better one.
+
+The estructure of this projects has two different parts:
+* Service directory: where the script and the dockerfile to build the image is located.
+* Templates directory: which is intended to be added as templates to the catalog so we can launch this from the catalog itself.
 
 
 ## Getting Started
 
-El programa esta pensado para ser lanzado como un stack de rancher desde el catalogo.
-En primer lugar debemos añadir a nuestro rancher como catalogo este repositorio. De esta forma tendremos acceso al servicio desde el catalogo.
-A continuación, entraremos en nuestro catalogo y seleccionamos este stack. Debemos elegir la version (version actual: v0.1) y se solicitará, además del la clave de acceso (Access-Key) y la clave secreta (Secret-Key) de la API a la que se va a acceder, la URL donde se encuentran los parámetros de configuración, en formato YAML, con los que se desea arrancar el servicio. Estos parámetros son:
+This project is intended to be launched as a template from the Rancher catalog. So the first step is add this repository to the rancher catalog. You can copy the directory ml-modeling-experiments to your catalog repository too.
 
-1. time_stop: tiempo de vida de los stacks que va a lanzar el servicio
-2. limit_stacks: número máximo de stacks que deben estar ejecutandose al mismo tiempo
-3. stacks_catalog: lista YAML en la que se deben insertar cada uno de los stacks de catalogo que se desee ejecutar
+Then you can access to the template experiment-launcher. Before you can launch the experiments, you have to specify in a yaml file the different parameters for the launcher to try out.
+It is necessary select properly the parameters in the configuration yaml file. This file has the following format:
+```
+   time_out: 30.0
+   limit_stacks: 4
+   stacks_catalog:
+	 CATALOG1:
+	   URL_API: http://your-rancher-url/v1-catalog/templates/your-catalog:kubernetes*your-service:0
+	   URL_RANCHER: https://your-rancher-url:80/r/projects/1a8238/kubernetes
+	   PARAMS:
+		 param1:
+			 type: absolute
+			 param:
+			   - Hello
+			   - Good Morning
+		 param2:
+			 type: lineal
+			 initial-value: 0
+			 final-value: 4
+			 interval: 2
+```
 
-Dentro de cada uno de los stacks de catalogo a lanzar, se deben especificar los siguientes parámetros:
+You have to specified the following parameters:
+- **time_out**: The time limit for the experiments to run.
+- **limit_stacks**: The limit for the maximun amount of experiments running at the same time.
+- **stacks_catalog**: Here you have to specify the diferent services to launch and the parameters for the services. First you gave a name to the catalog to launch. In this expample we set this as CATALOG1, but it can be anything. Then you specified for that catalog the following parameters:
+   - **URL_API**: This is the url in wich is located the template of the service to launch. You have to seek this url in the Rancher API. It should have this form: `http://your-rancher-url/v1-catalog/templates/your-catalog:kubernetes*your-service:0`
+   - **URL_RANCHER**: This is the url where your rancher is located. In that rancher direction is where the experiments is going to be launched. This should have the following form: `https://your-rancher-url:80/r/projects/1a8238/kubernetes`
+   - **PARAMS**: here you have to specify the parameters for the expermiment to try and launch. Notice that this service will try all the combinations possible between the parameters. Also is very important that the names of this parametres are exactly the same as they are in the service's rancher-compose file. Otherwise it won't work. You can specified diferent two diferent types of parameters. In the example you can see both of these types:
+	   - lineal: for lineal increments
+	   - absolute: for a concrete values or strings
 
-1. CATALOG1: a sustituir por el nombre que queramos darle al stack
-2. URL_API: dirección de la API del stack a arrancar, donde se encuentra el docker compose. Debe tener la siguiente forma: `http://url_de_ejemlo_donde_este_tu_rancher/v1-catalog/templates/nombre_del_catalogo:nobre_del_servicio:0`
-3. URL_RANCHER: dirección base de rancher
-4. PARAMS: lista YAML donde se especifican los parametros que se van a usar
+**IMPORTANT NOTE: The URL_API and de URL_RANCHER has to be accessible from our host.**
 
-Dentro de PARAMS, se debe registrar una lista con el nombre de los parametros y el rango de valores a lanzar, señalando lo siguiente:
+This configuration yaml file could be in any source in internet. Then we set the parameters for rancher:
+- **Url entries**: the url where the config file is located
+- **Access-key**: access key for rancher
+- **Secret-key**: secret key for rancher
 
-1. param1: a sustituir por el nombre del parametro del stack concreto a lanzar
-2. type: tipo de dato (absolute o lineal)
-3. param: lista con el rango de parámetros del param1
-
-Un modelo de YAML de configuración sería el siguiente:
-
-	time_stop: 30.0
-	limit_stacks: 4
-	stacks_catalog:
-	  CATALOG1:
-	    URL_API: http://200.95.5.6:8080/v1-catalog/templates/impresionParams:app:0
-	    URL_RANCHER: http://200.95.5.6:8080/
-	    PARAMS:
-	      param1:
-	          type: absolute
-	          param:
-	            - Hola
-	            - Buenos Dias
-	      param2:
-	          type: lineal
-	          initial-value: 0
-	          final-value: 4
-	          interval: 2
-
-
-#### NOTA IMPORTANTE: Hay que tener en cuenta que las url del rancher y del stack del catalogo tienen que ser accesibles desde nuestro host.
-
-Tras esto ya se puede lanzar nuestro stack
 
 ## Dockerizacion python script
 
-En la carpeta service tenemos la dockerizacion del script en python con todo lo necesario para convertirlo en un container independiente que lance servicios. La carpeta contiene tando el programa python como el Dockerfile que se usa para construir la imagen. En la carpeta exec se encuentran los ejecutables del rancherCLI y el rancher-compose. Estos son los de la version para linux.
+In the Service directory we have the dockerfile to convert our script in a docker image. It's important to note that the template for the kubernetes catalog in rancher is configured to select our configuration of the image. Si if you want to build your own image and launched in kubernetes from the catalog, you have to change the experiment-launcher-rc.yml
 
-### Pruebas del script individuales
+Also in this directory we have the exec directory to store the executables for rancher-compose, rancherCLI and kubectl.
 
-Si se quiere probar el funcionamiento del script individualmente se debe tener en cuenta que este recibe un dos argumentos:
-* La url de las entradas.
-* El Acces-Key
-* El Secret-Key
-El comando tendría la siguiente forma:
+### Individual test for the script
 
+You can create a container, and execute the following command. The first parameter for 'lanzadorServicios.py' is the url with the parameters to test, the second one is the rancher access key, and the last one the secret key:
 ```
-python lanzadorServicios.py http://iibanezm.neocities.org/modeloYAML.txt anlsdjghq89tqjnjnad ertyuikmnbvgchQWG1394141423jndfkcnq
+python lanzadorServicios.py http://url_parameters.text access-key secret-key
 ```
 
-## Template para el catalogo
+## Kubernetes Templates
 
-En la carpeta service es donde almacenamos todo lo referente al catalogo que saldrá en nuestro rancher. Tendremos que agregar este repositorio al nuestro rancher y saldrá el servicio de ml-modeling-experiments. Contiene todo lo necesario para que se muestre correctamente.
+This directory has everything necessary for launch the experiments from the catalog in Rancher. We have also another template to try out which just print a couple of parametres that we give.
+You can add this repository to yout rancher catalog or copy the directory ml-modeling-experiments to your catalog repository too.

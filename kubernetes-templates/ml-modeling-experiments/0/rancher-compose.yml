@@ -1,17 +1,17 @@
 .catalog:
-    name: "lanzadorStacks"
+    name: "Experiments Launcher"
     version: "v0.1"
-    description: "Lanzador de experimentos para diferentes configuraciones de varios stacks del catalogo."
+    description: "Atomatic launcher for services in the catalog with diferent configurations."
     questions:
         - variable: "access_key"
-          label: "Acces key para acceder a rancher"
+          label: "Access key for Rancher"
           required: true
           type: "string"
         - variable: "secret_key"
-          label: "Secret key para el acceso a reancher"
+          label: "Secret key for Rancher"
           required: true
           type: "string"
         - variable: "url_entradas"
-          label: "Url donde se encuentra el archivo donde leer la lista de parametros."
+          label: "Url where the yaml file with the configuration parametres is located."
           required: true
           type: "string"
