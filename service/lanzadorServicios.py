@@ -118,7 +118,7 @@ def get_configuration(configuration, access_key, secret_key):
     return (files, url_rancher, url_catalog)
 
 
-def configurate_kubectl (rancher_url, access_key, secret_key):
+def configurate_kubectl(rancher_url, access_key, secret_key):
     # TODO: Dejar configurable los parametros que llevan el nombre ml-kube
 
     # Configuramos kubectl
@@ -127,8 +127,8 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
     #       -> "..", "..", "..", "root/.kube/config"
     # __file__ es lo mismo que sys.argv[0]
-    #basepath = os.path.dirname(__file__)
-    #filepath = os.path.abspath(
+    # basepath = os.path.dirname(__file__)
+    # filepath = os.path.abspath(
     #                os.path.join(basepath, "..", "..", "..", ".kube/config"))
     os.system("cp config /root/.kube/config")
     filepath = "/root/.kube/config"
@@ -148,9 +148,9 @@ def configurate_kubectl (rancher_url, access_key, secret_key):
     with open(filepath, 'w') as f:
         yaml.dump(kubeConfig, f)
 
-    #os.system("--------------------PODS DE RANCHER--------------------------")
-    #os.system("kubectl get pods")
-    #os.system("-------------------------------------------------------------")
+    # os.system("--------------------PODS DE RANCHER-------------------------")
+    # os.system("kubectl get pods")
+    # os.system("------------------------------------------------------------")
 
 
 def launch_experiments(files, catalog_name, parametros, parametros_nombre):
