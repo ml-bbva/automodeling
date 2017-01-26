@@ -36,7 +36,7 @@ def rm_namespace(namespace):
     global namespaces_running
     # Delete namespace content
     os.system(
-        './kubectl delete ' +
+        './exec/kubectl delete ' +
         '--all service,rc,ingress,pod --namespace=' +
         namespace
     )
@@ -125,25 +125,22 @@ def configurate_kubectl(rancher_url, access_key, secret_key):
     logger.info('Empezamos a configurar kubectl')
 
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
-    #       -> "..", "..", "..", "root/.kube/config"
-    # __file__ es lo mismo que sys.argv[0]
-    # basepath = os.path.dirname(__file__)
-    # filepath = os.path.abspath(
-    #                os.path.join(basepath, "..", "..", "..", ".kube/config"))
+
     os.system("cp config /root/.kube/config")
     filepath = "/root/.kube/config"
 
-    logger.debug('Ruta en la que se encuentra el archivo')
     # Obtenemos la plantilla para el config
     with open(filepath, 'r') as f:
         text = f.read()
-        logger.debug(text)
+        logger.debug('Plantilla del config\n' + text)
         kubeConfig = yaml.load(text)
 
     # rancher_url = https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
     kubeConfig['clusters'][0]['cluster']['server'] = rancher_url
     kubeConfig['users'][0]['user']['username'] = access_key
     kubeConfig['users'][0]['user']['password'] = secret_key
+
+    logger.debug('Configuration set')
 
     with open(filepath, 'w') as f:
         yaml.dump(kubeConfig, f)
