@@ -16,12 +16,12 @@ import os
 # TODO: configure flags for logger (argparse?)
 # TODO: create docstrings
 
-# LOGGER CONFIG
+# LOGGER CONFIG NOTE: Now level is INFO
 logger = logging.getLogger('AUTOMODELING')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 # create console handler and set level to debug
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 # create formatter
 formatter = logging.Formatter('%(name)s:%(levelname)s\t%(message)s')
 # add formatter to ch
