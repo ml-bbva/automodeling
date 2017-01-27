@@ -182,11 +182,11 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
                 with open('./files/launch/' + file_name, 'w') as f:
                     f.write(text)
 
-        logger.info('Preparado para lanzar namespaces')
 
         while(namespaces_running >= namespaces_limit):
             continue
 
+        logger.info('Preparado para lanzar namespaces')
         # Llamadas a kubectl
         # Se crea un namespace por cada combinacion
         create_namespace(namespace)
@@ -198,7 +198,6 @@ def launch_experiments(files, catalog_name, parametros, parametros_nombre):
         threads.append(threading.Timer(time_out, rm_namespace, args=[namespace]))
         threads[cont].start()
 
-        namespaces_running += 1
         cont = cont + 1
 
 
