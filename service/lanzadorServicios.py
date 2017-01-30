@@ -76,11 +76,11 @@ def main():
 
 def prepareDirectories():
     if(os.path.isdir('./logs')):
-        call(['rm', '-rf', './logs'])
+        os.system('rm -rf ./logs')
     os.mkdir("./logs")
 
     if(os.path.isdir('./files')):
-        call(['rm', '-rf', './files'])
+        os.system('rm -rf ./files')
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
@@ -116,10 +116,9 @@ def configurateKubectl(rancher_url):
     logger.info('Empezamos a configurar kubectl')
 
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
-
-    os.system("cp config /root/.kube/config")
     filepath = "/root/.kube/config"
-
+    os.system("cp config " + filepath)
+    
     # Obtenemos la plantilla para el config
     with open(filepath, 'r') as f:
         text = f.read()
@@ -174,7 +173,7 @@ def getDefinedParams(parametros_yml):
 
 
 def addDefaultParams(parametros_nombre, parametros):
-    with open('./service/files/rancher-compose.yml','r') as f:
+    with open('./files/rancher-compose.yml','r') as f:
         fileContent=f.read()
         rancherComposeContent=yaml.load(fileContent)
 
