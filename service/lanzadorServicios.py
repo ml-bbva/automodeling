@@ -258,7 +258,8 @@ def rm_namespace(namespace):
     os.system(
         './exec/kubectl delete ' +
         '--all service,rc,ingress,pod --namespace=' +
-        namespace
+        namespace +
+        ' --now'
     )
     # Delete the namespace itself
     os.system('./exec/kubectl delete namespace ' + namespace)
