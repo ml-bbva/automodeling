@@ -234,7 +234,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
                 start_service(namespace, './files/launch/' + file)
 
         threads.append(threading.Timer(time_out, rm_namespace, args=[namespace]))
-        threads[cont].start()
+        threads[cont-1].start()
 
         cont = cont + 1
 
