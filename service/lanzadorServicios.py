@@ -281,8 +281,8 @@ def getResults(namespace):
         'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
         ' TOPIC=' + namespace + '-metrics'
         ' OFFSET=oldest' +
-        ' ./exec/kafka-console-consumer' + 
-        ' | tail -1')
+        ' ./exec/kafka-console-consumer' )#+ 
+        #' | tail -1')
         #' > ./logs/results.txt')
     #logger.info('Resultados del namespace ' + namespace + ':')
     #os.system('tail -1 ./logs/results.txt')
