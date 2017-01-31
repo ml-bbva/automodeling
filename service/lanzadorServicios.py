@@ -278,7 +278,7 @@ def getResults(namespace):
     # TODO: Obtener solo el último resultado, que es el que nos interesa
     os.system(
         'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
-        ' TOPIC=' + namespace + 
+        ' TOPIC=' + namespace + '-metrics'
         ' OFFSET=oldest' +
         ' ./exec/kafka-console-consumer' + 
         ' > ./logs/results.txt')
