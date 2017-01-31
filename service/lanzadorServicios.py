@@ -9,6 +9,7 @@ import yaml
 import numpy
 import logging
 import os
+import time 
 
 # import argparse or click
 # TO SEE DEBUG AND INFO: --log=
@@ -260,7 +261,10 @@ def rm_namespace(namespace):
     # Borra el namespace con el nombre dado y su contenido
     global namespaces_running
     # Llama a kafka para obtener los resultados
-    getResults(namespace)
+    #getResults(namespace)
+    getResultsThread = threading.Thread(target=getResults, args=namespace)
+    getResultsThread.start()
+    time.sleep(3)
     # Delete namespace content
     os.system(
         './exec/kubectl delete ' +
@@ -275,14 +279,13 @@ def rm_namespace(namespace):
 
 def getResults(namespace):
     # LLama a kafka pasandole la configuracion
-    # Obtiene todos los resultados obtenidos
-    # TODO: Obtener solo el último resultado, que es el que nos interesa
+    # Obtiene el último resultado
     os.system(
         'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
         ' TOPIC=' + namespace + '-metrics'
         ' OFFSET=oldest' +
-        ' ./exec/kafka-console-consumer' )#+ 
-        #' | tail -1')
+        ' ./exec/kafka-console-consumer' +
+        ' | tail -1')
         #' > ./logs/results.txt')
     #logger.info('Resultados del namespace ' + namespace + ':')
     #os.system('tail -1 ./logs/results.txt')
