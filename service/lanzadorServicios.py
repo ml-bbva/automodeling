@@ -144,10 +144,20 @@ def getDefinedParams(parametros_yml):
     # Las distintas formas que se consideran son: parametroNombre->n
     # 1. [valorInicial:valorFinal:Salto] -> Lineal
     # 2. TODO: [valorInicial:valorFinal:Función] -> Otro tipo de funcion
-    # 3. [un String]
+    # 3. TODO: HIDDEN_SIZE deberia aceptar tambien parametros que no fueran absolute
     for parametro in parametros_yml:
         logger.info(parametro)
         parametros_nombre.append(parametro)
+        # Obtiene el parametro HIDDEN_SIZE, que es especial 
+        #if(parametro=='HIDDEN_SIZE'):
+        #    layers = [parametros_yml[parametro]['number_units'] for i in range(parametros_yml[parametro]['number_layers'])]
+        #    combinations = []
+        #    for combination in itertools.product(*layers):
+        #        combination = ','.join(map(str,combination))
+        #        combinations.append(combination)
+        #    parametros.append(combinations)
+        #    continue
+
         opcion = parametros_yml[parametro]['type']
         # parametro[parametro.index("{"):parametro.index("}")]
         if(opcion == 'lineal'):
@@ -285,9 +295,9 @@ def getResults(namespace):
     
     kafkaConsumer = Popen(
         ['KAFKA_SERVICE=kafka.default.svc.cluster.local' +
-        'TOPIC='+namespace+'-metrics' +
-        'OFFSET=oldest' +
-        './exec/kafka-console-consumer',
+        ' TOPIC='+namespace+'-metrics' +
+        ' OFFSET=oldest' +
+        ' ./exec/kafka-console-consumer',
         '|', 'tail', '-1'], 
         stdout=PIPE)
     (out,err) = kafkaConsumer.communicate()
