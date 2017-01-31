@@ -180,7 +180,7 @@ def addDefaultParams(parametros_nombre, parametros):
     questions = rancherComposeContent['.catalog']['questions']
 
     for element in questions:
-        if(element['variable'] in parametros_nombre or element['variable']=='NAMESPACE'):
+        if(element['variable'] in parametros_nombre or element['variable']=='NAMESPACE' or element['variable']=='ROOT_TOPIC'):
             continue
         else:
             parametros_nombre.append(element['variable'])
@@ -220,6 +220,9 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
                 text = text.replace(
                     '${' + 'NAMESPACE' + '}',
                     namespace)
+                text = text.replace(
+                    '${' + 'ROOT_TOPIC' + '}',
+                    namespace)
                 with open('./files/launch/' + file_name, 'w') as f:
                     f.write(text)
 
@@ -256,6 +259,8 @@ def start_service(namespace, serviceFile):
 def rm_namespace(namespace):
     # Borra el namespace con el nombre dado y su contenido
     global namespaces_running
+    # Llama a kafka para obtener los resultados
+    getResults(namespace)
     # Delete namespace content
     os.system(
         './exec/kubectl delete ' +
@@ -267,6 +272,18 @@ def rm_namespace(namespace):
     os.system('./exec/kubectl delete namespace ' + namespace)
     namespaces_running -= 1
 
+def getResults(namespace):
+    # LLama a kafka pasandole la configuracion
+    # Obtiene todos los resultados obtenidos
+    # TODO: Obtener solo el último resultado, que es el que nos interesa
+    os.system(
+        'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
+        ' TOPIC=' + namespace + 
+        ' OFFSET=oldest' +
+        ' ./exec/kafka-console-consumer' + 
+        ' > ./logs/results.txt')
+    logger.info('Resultados del namespace ' + namespace + ':')
+    os.system('tail -1 ./logs/results.txt')
 
 
 main()
