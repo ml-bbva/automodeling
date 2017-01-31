@@ -284,9 +284,9 @@ def getResults(namespace):
     #    ' | tail -1')
     
     kafkaConsumer = Popen(
-        ['KAFKA_SERVICE=kafka.default.svc.cluster.local',
-        'TOPIC='+namespace+'-metrics',
-        'OFFSET=oldest',
+        ['KAFKA_SERVICE=kafka.default.svc.cluster.local' +
+        'TOPIC='+namespace+'-metrics' +
+        'OFFSET=oldest' +
         './exec/kafka-console-consumer',
         '|', 'tail', '-1'], 
         stdout=PIPE)
