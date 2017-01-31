@@ -286,24 +286,12 @@ def rm_namespace(namespace):
 def getResults(namespace):
     # LLama a kafka pasandole la configuracion
     # Obtiene el último resultado
-    #os.system(
-    #    'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
-    #    ' TOPIC=' + namespace + '-metrics'
-    #    ' OFFSET=oldest' +
-    #    ' ./exec/kafka-console-consumer' +
-    #    ' | tail -1')
-    
-    kafkaConsumer = Popen(
-        ['KAFKA_SERVICE=kafka.default.svc.cluster.local' +
-        ' TOPIC='+namespace+'-metrics' +
+    os.system(
+        'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
+        ' TOPIC=' + namespace + '-metrics'
         ' OFFSET=oldest' +
-        ' ./exec/kafka-console-consumer',
-        '|', 'tail', '-1'], 
-        stdout=PIPE)
-    (out,err) = kafkaConsumer.communicate()
-    kafkaConsumer.terminate()
-    logger.info('Resultados obtenidos en el namespace ' + namespace + ':')
-    logger.info(out)
+        ' ./exec/kafka-console-consumer' +
+        ' | tail -1')
 
 
 main()
