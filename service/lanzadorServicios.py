@@ -272,6 +272,7 @@ def rm_namespace(namespace):
     os.system('./exec/kubectl delete namespace ' + namespace)
     namespaces_running -= 1
 
+
 def getResults(namespace):
     # LLama a kafka pasandole la configuracion
     # Obtiene todos los resultados obtenidos
@@ -281,9 +282,10 @@ def getResults(namespace):
         ' TOPIC=' + namespace + '-metrics'
         ' OFFSET=oldest' +
         ' ./exec/kafka-console-consumer' + 
-        ' > ./logs/results.txt')
-    logger.info('Resultados del namespace ' + namespace + ':')
-    os.system('tail -1 ./logs/results.txt')
+        ' | tail -1'
+        #' > ./logs/results.txt')
+    #logger.info('Resultados del namespace ' + namespace + ':')
+    #os.system('tail -1 ./logs/results.txt')
 
 
 main()
