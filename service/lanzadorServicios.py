@@ -184,7 +184,9 @@ def addDefaultParams(parametros_nombre, parametros):
             continue
         else:
             parametros_nombre.append(element['variable'])
-            parametros.append(element['default'])
+            listElem = list()
+            listElem.append(element['default'])
+            parametros.append(listElem)
 
     return (parametros_nombre, parametros)
 
