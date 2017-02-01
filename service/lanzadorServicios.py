@@ -9,6 +9,7 @@ import yaml
 import numpy
 import logging
 import os
+import signal
 
 # import argparse or click
 # TO SEE DEBUG AND INFO: --log=
@@ -84,6 +85,10 @@ def prepareDirectories():
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
+    if(os.path.isdir('./results')):
+        os.system('rm -rf ./results')
+    os.mkdir("./results")
+
 
 def getConfiguration(configuration):
     # Extrae de un yaml toda la configuracion para el lanzador de namespaces y la organiza
@@ -149,14 +154,14 @@ def getDefinedParams(parametros_yml):
         logger.info(parametro)
         parametros_nombre.append(parametro)
         # Obtiene el parametro HIDDEN_SIZE, que es especial 
-        #if(parametro=='HIDDEN_SIZE'):
-        #    layers = [parametros_yml[parametro]['number_units'] for i in range(parametros_yml[parametro]['number_layers'])]
-        #    combinations = []
-        #    for combination in itertools.product(*layers):
-        #        combination = ','.join(map(str,combination))
-        #        combinations.append(combination)
-        #    parametros.append(combinations)
-        #    continue
+        if(parametro=='HIDDEN_SIZE'):
+            layers = [parametros_yml[parametro]['number_units'] for i in range(parametros_yml[parametro]['number_layers'][0])]
+            combinations = []
+            for combination in itertools.product(*layers):
+                combination = ','.join(map(str,combination))
+                combinations.append(combination)
+            parametros.append(combinations)
+            continue
 
         opcion = parametros_yml[parametro]['type']
         # parametro[parametro.index("{"):parametro.index("}")]
@@ -248,7 +253,9 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
             if(file != 'rancher-compose.yml'):
                 start_service(namespace, './files/launch/' + file)
 
-        threads.append(threading.Timer(time_out, rm_namespace, args=[namespace]))
+        pid = startKafka(namespace)
+
+        threads.append(threading.Timer(time_out, rm_namespace, args=[namespace,pid]))
         threads[cont-1].start()
 
         cont = cont + 1
@@ -266,9 +273,27 @@ def start_service(namespace, serviceFile):
     os.system('./exec/kubectl --namespace=' + namespace + ' create -f ' + serviceFile)
 
 
-def rm_namespace(namespace):
+def startKafka(namespace):
+    pid = 0
+    with open('./results/'+namespace, 'w') as file_results:
+        kafkaConsumer = Popen(['./exec/kafka-console-consumer'], 
+            env={"KAFKA_SERVICE":"kafka.default.svc.cluster.local",
+                "TOPIC": namespace+"-metrics",
+                "OFFSET": "oldest",
+                "KAFKA_GROUP":namespace},
+            stdout=file_results, 
+            shell=True,
+            preexec_fn=os.setsid)
+        pid = kafkaConsumer.pid
+        logger.info(pid)
+    return pid
+
+
+def rm_namespace(namespace,pid):
     # Borra el namespace con el nombre dado y su contenido
     global namespaces_running
+    # Mata el proceso kafka
+    killProcess(pid)
     # Llama a kafka para obtener los resultados
     getResults(namespace)
     # Delete namespace content
@@ -286,12 +311,12 @@ def rm_namespace(namespace):
 def getResults(namespace):
     # LLama a kafka pasandole la configuracion
     # Obtiene el último resultado
-    os.system(
-        'KAFKA_SERVICE=kafka.default.svc.cluster.local' +
-        ' TOPIC=' + namespace + '-metrics'
-        ' OFFSET=oldest' +
-        ' ./exec/kafka-console-consumer' +
-        ' | tail -1')
+    os.system('cat ./results/'+namespace+' | tail -1')
+
+
+def killProcess(pid):
+    os.killpg(os.getpgid(pid), signal.SIGTERM)
+    
 
 
 main()
