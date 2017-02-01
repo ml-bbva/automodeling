@@ -10,6 +10,7 @@ import numpy
 import logging
 import os
 import signal
+import shutil
 
 # import argparse or click
 # TO SEE DEBUG AND INFO: --log=
@@ -77,16 +78,19 @@ def main():
 
 def prepareDirectories():
     if(os.path.isdir('./logs')):
-        os.rmdir("./logs")
+        #os.rmdir("./logs")
+        shutil.rmtree('./logs')
     os.mkdir("./logs")
 
     if(os.path.isdir('./files')):
-        os.rmdir("./files")
+        #os.rmdir("./files")
+        shutil.rmtree('./files')
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
     if(os.path.isdir('./results')):
-        os.rmdir('./results')
+        #os.rmdir('./results')
+        shutil.rmtree('./results')
     os.mkdir("./results")
 
 
@@ -258,6 +262,8 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
         threads.append(threading.Timer(time_out, rm_namespace, args=[namespace,pid]))
         threads[cont-1].start()
 
+
+
         cont = cont + 1
 
 
@@ -315,7 +321,10 @@ def getResults(namespace):
 
 
 def killKafkaProcess(pid):
+    # Mata el proceso kafka creado por popen
     os.killpg(os.getpgid(pid), signal.SIGTERM)
+
+
 
 
 main()
