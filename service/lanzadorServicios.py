@@ -77,16 +77,16 @@ def main():
 
 def prepareDirectories():
     if(os.path.isdir('./logs')):
-        os.system('rm -rf ./logs')
+        os.rmdir("./logs")
     os.mkdir("./logs")
 
     if(os.path.isdir('./files')):
-        os.system('rm -rf ./files')
+        os.rmdir("./files")
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
     if(os.path.isdir('./results')):
-        os.system('rm -rf ./results')
+        os.rmdir('./results')
     os.mkdir("./results")
 
 
@@ -293,7 +293,7 @@ def rm_namespace(namespace,pid):
     # Borra el namespace con el nombre dado y su contenido
     global namespaces_running
     # Mata el proceso kafka
-    killProcess(pid)
+    killKafkaProcess(pid)
     # Llama a kafka para obtener los resultados
     getResults(namespace)
     # Delete namespace content
@@ -314,9 +314,8 @@ def getResults(namespace):
     os.system('cat ./results/'+namespace+' | tail -1')
 
 
-def killProcess(pid):
+def killKafkaProcess(pid):
     os.killpg(os.getpgid(pid), signal.SIGTERM)
-    
 
 
 main()
