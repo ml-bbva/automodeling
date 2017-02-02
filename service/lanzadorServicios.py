@@ -152,6 +152,8 @@ def configurateKubectl(rancher_url):
 
     # calculo de la ruta relativa donde se encuentra la carpeta .kube
     filepath = "/root/.kube/config"
+    if args.local:
+        filepath = '/home/ignacio/.kube/config'
     os.system("cp config " + filepath)
 
     # Obtenemos la plantilla para el config
