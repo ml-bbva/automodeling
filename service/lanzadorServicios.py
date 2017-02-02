@@ -14,10 +14,7 @@ import argparse
 import shutil
 from operator import methodcaller
 
-
-# import argparse or click
-# TO SEE DEBUG AND INFO: --log=
-# https://docs.python.org/3/howto/logging.html
+# TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
 # TODO: create docstrings
 
@@ -226,9 +223,9 @@ def getDefinedParams(parametros_yml):
 
 
 def addDefaultParams(parametros_nombre, parametros):
-    with open('./files/rancher-compose.yml','r') as f:
-        fileContent=f.read()
-        rancherComposeContent=yaml.load(fileContent)
+    with open('./files/rancher-compose.yml', 'r') as f:
+        fileContent = f.read()
+        rancherComposeContent = yaml.load(fileContent)
 
     questions = rancherComposeContent['.catalog']['questions']
 
@@ -355,14 +352,14 @@ def getResults(namespace, numberResults):
     # Obtiene el resultado del numero de lineas especificadas como parametro
     process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
     process2 = Popen(['tail', '-'+str(numberResults)], stdin=process1.stdout, stdout=PIPE)
-    (out, err) = process2.communicate() 
+    (out, err) = process2.communicate()
     logger.info(out)
     results = out.split('\n')
-    #results = map(split('\t'),results)
+    # results = map(split('\t'),results)
     results = map(methodcaller("split", ""), results)
     logger.info(results)
-    #logger.info("Ejecutando cat directamente:")
-    #os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
+    # logger.info("Ejecutando cat directamente:")
+    # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
 
 def killProcess(pid):
