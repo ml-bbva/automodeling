@@ -22,7 +22,7 @@ spec:
         - "sh"
         args:
         - -c
-        - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key} --info; sleep infinity
+        - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key} --debug; sleep infinity
         image: automodeling/automodeling:latest
         imagePullPolicy: Always
         name: experiment-launcher
