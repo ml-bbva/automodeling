@@ -297,7 +297,7 @@ def startKafka(namespace):
     return pid
 
 
-def manageResults(namespace):
+#def manageResults(namespace):
     #with open("./results/"+namespace, 'r') as results:
 
 
