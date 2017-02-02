@@ -326,7 +326,7 @@ def getResults(namespace, numberResults):
     #os.system('cat ./results/'+namespace+' | tail -'+numberResults)
     #command = 'cat ./results/'+namespace+' | tail -'+numberResults
     #os.popen(command).read()
-    process = Popen(['cat','./results/'+namespace,'|','tail','-'+numberResults], stdout=PIPE, shell=True)
+    process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
     (out,err) = process.communicate()
     logger.info(out)
 
