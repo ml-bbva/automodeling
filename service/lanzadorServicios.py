@@ -330,7 +330,7 @@ def getResults(namespace, numberResults):
     (out,err) = process.communicate()
     logger.info(out)
     logger.info("Ejecutando cat directamente:")
-    os.system('cat ./results/'+namespace+' | tail -'+numberResults)
+    os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
 
 def killProcess(pid):
