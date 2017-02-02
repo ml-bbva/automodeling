@@ -355,9 +355,9 @@ def getResults(namespace, numberResults):
     (out, err) = process2.communicate()
     logger.info(out)
 
-    results = out.split('\n')
-    # results = map(split('\t'),results)
-    results = map(methodcaller("split", ""), results)
+    results = str(out).split('\n')
+    #results = map(split('\t'),results)
+    results = map(methodcaller("split"), results)
 
     logger.info(results)
     # logger.info("Ejecutando cat directamente:")
