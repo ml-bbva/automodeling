@@ -329,6 +329,8 @@ def getResults(namespace, numberResults):
     process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
     (out,err) = process.communicate()
     logger.info(out)
+    logger.info("Ejecutando cat directamente:")
+    os.system('cat ./results/'+namespace+' | tail -'+numberResults)
 
 
 def killProcess(pid):
