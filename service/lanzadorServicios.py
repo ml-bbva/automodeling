@@ -12,6 +12,7 @@ import os
 import signal
 import argparse
 import shutil
+from operator import methodcaller
 
 
 # import argparse or click
@@ -352,16 +353,16 @@ def rm_namespace(namespace, pid):
 
 def getResults(namespace, numberResults):
     # Obtiene el resultado del numero de lineas especificadas como parametro
-    # os.system('cat ./results/'+namespace+' | tail -'+numberResults)
-    # command = 'cat ./results/'+namespace+' | tail -'+numberResults
-    # os.popen(command).read()
-    #  process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
     process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
     process2 = Popen(['tail', '-'+str(numberResults)], stdin=process1.stdout, stdout=PIPE)
-    (out, err) = process2.communicate()
+    (out, err) = process2.communicate() 
     logger.info(out)
-    logger.info("Ejecutando cat directamente:")
-    os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
+    results = out.split('\n')
+    #results = map(split('\t'),results)
+    results = map(methodcaller("split", ""), results)
+    logger.info(results)
+    #logger.info("Ejecutando cat directamente:")
+    #os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
 
 def killProcess(pid):
