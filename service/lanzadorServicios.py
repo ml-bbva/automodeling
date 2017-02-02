@@ -306,9 +306,9 @@ def rm_namespace(namespace,pid):
     # Borra el namespace con el nombre dado y su contenido
     global namespaces_running
     # Mata el proceso kafka
-    killKafkaProcess(pid)
+    killProcess(pid)
     # Llama a kafka para obtener los resultados
-    getResults(namespace)
+    getResults(namespace,1)
     # Delete namespace content
     os.system(
         './exec/kubectl delete ' +
@@ -321,13 +321,17 @@ def rm_namespace(namespace,pid):
     namespaces_running -= 1
 
 
-def getResults(namespace):
-    # LLama a kafka pasandole la configuracion
-    # Obtiene el último resultado
-    os.system('cat ./results/'+namespace+' | tail -1')
+def getResults(namespace, numberResults):
+    # Obtiene el resultado del numero de lineas especificadas como parametro
+    #os.system('cat ./results/'+namespace+' | tail -'+numberResults)
+    #command = 'cat ./results/'+namespace+' | tail -'+numberResults
+    #os.popen(command).read()
+    process = Popen(['cat','./results/'+namespace,'|','tail','-'+numberResults], stdout=PIPE, shell=True)
+    (out,err) = process.communicate()
+    print out
 
 
-def killKafkaProcess(pid):
+def killProcess(pid):
     # Mata el proceso kafka creado por popen
     os.killpg(os.getpgid(pid), signal.SIGTERM)
 
