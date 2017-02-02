@@ -108,18 +108,18 @@ def main():
 
 def prepareDirectories():
     if(os.path.isdir('./logs')):
-        #os.rmdir("./logs")
+        # os.rmdir("./logs")
         shutil.rmtree('./logs')
     os.mkdir("./logs")
 
     if(os.path.isdir('./files')):
-        #os.rmdir("./files")
+        # os.rmdir("./files")
         shutil.rmtree('./files')
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
     if(os.path.isdir('./results')):
-        #os.rmdir('./results')
+        # os.rmdir('./results')
         shutil.rmtree('./results')
     os.mkdir("./results")
 
@@ -248,7 +248,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
     global namespaces_running
     cont = 1
     threads = []
-    #threadsManageResults = []
+    # threadsManageResults = []
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
         # Substitucion de las variables en los ficheros
@@ -293,11 +293,11 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
 
         pid = startKafka(namespace)
 
-        threads.append(threading.Timer(time_out, rm_namespace, args=[namespace,pid]))
+        threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
         threads[cont-1].start()
 
-        #threadsManageResults.append(threading.Thread(target=manageResults, args=[namespace]))
-        #threadsManageResults[cont-1].start()
+        # threadsManageResults.append(threading.Thread(target=manageResults, args=[namespace]))
+        # threadsManageResults[cont-1].start()
 
         cont = cont + 1
 
@@ -317,11 +317,12 @@ def start_service(namespace, serviceFile):
 def startKafka(namespace):
     pid = 0
     with open('./results/'+namespace, 'w') as file_results:
-        kafkaConsumer = Popen(['./exec/kafka-console-consumer'],
-            env={"KAFKA_SERVICE":"kafka.default.svc.cluster.local",
-                "TOPIC": namespace+"-metrics",
-                "OFFSET": "oldest",
-                "KAFKA_GROUP":namespace},
+        kafkaConsumer = Popen(
+            ['./exec/kafka-console-consumer'],
+            env={"KAFKA_SERVICE": "kafka.default.svc.cluster.local",
+                 "TOPIC": namespace+"-metrics",
+                 "OFFSET": "oldest",
+                 "KAFKA_GROUP": namespace},
             stdout=file_results,
             shell=True,
             preexec_fn=os.setsid)
@@ -330,13 +331,13 @@ def startKafka(namespace):
     return pid
 
 
-def rm_namespace(namespace,pid):
+def rm_namespace(namespace, pid):
     # Borra el namespace con el nombre dado y su contenido
     global namespaces_running
     # Mata el proceso kafka
     killProcess(pid)
     # Llama a kafka para obtener los resultados
-    getResults(namespace,1)
+    getResults(namespace, 1)
     # Delete namespace content
     os.system(
         './exec/kubectl delete ' +
@@ -351,13 +352,13 @@ def rm_namespace(namespace,pid):
 
 def getResults(namespace, numberResults):
     # Obtiene el resultado del numero de lineas especificadas como parametro
-    #os.system('cat ./results/'+namespace+' | tail -'+numberResults)
-    #command = 'cat ./results/'+namespace+' | tail -'+numberResults
-    #os.popen(command).read()
-    #process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
-    process1 = Popen(['cat','./results/'+namespace], stdout=PIPE)
-    process2 = Popen(['tail','-'+str(numberResults)], stdin=process1.stdout , stdout=PIPE)
-    (out,err) = process2.communicate()
+    # os.system('cat ./results/'+namespace+' | tail -'+numberResults)
+    # command = 'cat ./results/'+namespace+' | tail -'+numberResults
+    # os.popen(command).read()
+    #  process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
+    process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
+    process2 = Popen(['tail', '-'+str(numberResults)], stdin=process1.stdout, stdout=PIPE)
+    (out, err) = process2.communicate()
     logger.info(out)
     logger.info("Ejecutando cat directamente:")
     os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
@@ -367,6 +368,5 @@ def killProcess(pid):
     # Mata el proceso kafka creado por popen
     os.killpg(os.getpgid(pid), signal.SIGTERM)
 
+
 main()
-
-
