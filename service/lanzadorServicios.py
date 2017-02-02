@@ -354,8 +354,10 @@ def getResults(namespace, numberResults):
     #os.system('cat ./results/'+namespace+' | tail -'+numberResults)
     #command = 'cat ./results/'+namespace+' | tail -'+numberResults
     #os.popen(command).read()
-    process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
-    (out,err) = process.communicate()
+    #process = Popen(['cat','./results/'+namespace,'|','tail','-'+str(numberResults)], stdout=PIPE, shell=True)
+    process1 = Popen(['cat','./results/'+namespace], stdout=PIPE)
+    process2 = Popen(['tail','-'+str(numberResults)], stdin=process1.stdout , stdout=PIPE)
+    (out,err) = process2.communicate()
     logger.info(out)
     logger.info("Ejecutando cat directamente:")
     os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
@@ -366,3 +368,5 @@ def killProcess(pid):
     os.killpg(os.getpgid(pid), signal.SIGTERM)
 
 main()
+
+
