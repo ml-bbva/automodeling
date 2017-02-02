@@ -2,7 +2,7 @@
 
 # Automodeling
 
-**INFO MODE VERSION**: Some info of the execution will be printed in logs
+**QUIET MODE VERSION**: Only warnings and errors will be printed
 
 ### Info:
 

@@ -2,7 +2,7 @@
 
 # Automodeling
 
-**INFO MODE VERSION**: Some info of the execution will be printed in logs
+**DEBUG MODE VERSION**: Debug logging is going to be printed
 
 ### Info:
 
