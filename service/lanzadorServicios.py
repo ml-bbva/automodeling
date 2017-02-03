@@ -13,6 +13,7 @@ import signal
 import argparse
 import shutil
 from operator import methodcaller
+import time
 
 # TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
@@ -246,7 +247,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
     global namespaces_running
     cont = 1
     threads = []
-    threadsManageResults = []
+    threadsCheckResults = []
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
         # Substitucion de las variables en los ficheros
@@ -290,18 +291,28 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
                 start_service(namespace, './files/launch/' + file)
 
         pid = startKafka(namespace)
-        check_results(namespace)
 
-        threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
-        threads[cont-1].start()
+        #threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
+        #threads[cont-1].start()
 
-        # threadsManageResults.append(threading.Thread(target=manageResults, args=[namespace]))
-        # threadsManageResults[cont-1].start()
+        threadsCheckResults.append(threading.Thread(checkResults, args=[namespace,time_out]))
+        threadsCheckResults[cont-1].start()
 
         cont = cont + 1
 
-def check_results(namespace):
-    pass
+
+def checkResults(namespace, time_out):
+    time_start = time.time()
+    time_finish = time_start + time_out
+    while (time.time() <= time_finish):
+        lastResults = getResults(namespace,10)
+        if(lastResults[len(lastResults)]['accuracy'] == 1):
+            logger.info('Resultados: ' + lastResults)
+            rm_namespace(namespace)
+        #elif()
+
+
+
 
 def create_namespace(namespace):
     # Crea un namespace con el nombre dado
@@ -364,6 +375,11 @@ def getResults(namespace, numberResults):
     results = list(map(methodcaller("split"), results))
 
     logger.info(results)
+
+    resultsList = []
+    resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
+
+    return resultsList
     # logger.info("Ejecutando cat directamente:")
     # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
