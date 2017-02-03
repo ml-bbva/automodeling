@@ -295,20 +295,20 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
         #threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
         #threads[cont-1].start()
 
-        threadsCheckResults.append(threading.Thread(checkResults, args=[namespace,time_out]))
+        threadsCheckResults.append(threading.Thread(checkResults, args=[namespace,time_out,pid]))
         threadsCheckResults[cont-1].start()
 
         cont = cont + 1
 
 
-def checkResults(namespace, time_out):
+def checkResults(namespace, time_out, pid):
     time_start = time.time()
     time_finish = time_start + time_out
     while (time.time() <= time_finish):
         lastResults = getResults(namespace,10)
         if(lastResults[len(lastResults)]['accuracy'] == 1):
             logger.info('Resultados: ' + lastResults)
-            rm_namespace(namespace)
+            rm_namespace(namespace,pid)
         #elif()
 
 
