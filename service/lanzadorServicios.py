@@ -310,6 +310,7 @@ def checkResults(namespace, time_out, pid):
         #    logger.info('Resultados: ' + lastResults)
         #    rm_namespace(namespace,pid)
         #elif()
+        time.sleep(5)
 
 
 
@@ -381,6 +382,7 @@ def getResults(namespace, numberResults):
     #resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
 
     return resultsList
+    
     # logger.info("Ejecutando cat directamente:")
     # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
