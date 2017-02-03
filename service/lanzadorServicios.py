@@ -295,7 +295,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
         #threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
         #threads[cont-1].start()
 
-        threadsCheckResults.append(threading.Thread(checkResults, args=[namespace,time_out,pid]))
+        threadsCheckResults.append(threading.Thread(target=checkResults, args=[namespace,time_out,pid]))
         threadsCheckResults[cont-1].start()
 
         cont = cont + 1
@@ -377,7 +377,8 @@ def getResults(namespace, numberResults):
     logger.info(results)
 
     resultsList = []
-    resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
+    
+    #resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
 
     return resultsList
     # logger.info("Ejecutando cat directamente:")
