@@ -357,7 +357,7 @@ def getResults(namespace, numberResults):
 
     results = str(out).split('\n')
     #results = map(split('\t'),results)
-    results = map(methodcaller("split"), results)
+    results = list(map(methodcaller("split"), results))
 
     logger.info(results)
     # logger.info("Ejecutando cat directamente:")
