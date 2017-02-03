@@ -246,7 +246,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
     global namespaces_running
     cont = 1
     threads = []
-    # threadsManageResults = []
+    threadsManageResults = []
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
         # Substitucion de las variables en los ficheros
@@ -290,6 +290,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
                 start_service(namespace, './files/launch/' + file)
 
         pid = startKafka(namespace)
+        check_results(namespace)
 
         threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
         threads[cont-1].start()
@@ -299,6 +300,8 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
 
         cont = cont + 1
 
+def check_results(namespace):
+    pass
 
 def create_namespace(namespace):
     # Crea un namespace con el nombre dado
@@ -357,7 +360,7 @@ def getResults(namespace, numberResults):
     logger.info(out)
 
     results = str(out).split('\n')
-    #results = map(split('\t'),results)
+    # results = map(split('\t'),results)
     results = list(map(methodcaller("split"), results))
 
     logger.info(results)
