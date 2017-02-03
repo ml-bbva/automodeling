@@ -353,6 +353,7 @@ def getResults(namespace, numberResults):
     process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
     process2 = Popen(['tail', '-'+str(numberResults)], stdin=process1.stdout, stdout=PIPE)
     (out, err) = process2.communicate()
+    out = out.decode('UTF-8')
     logger.info(out)
 
     results = str(out).split('\n')
