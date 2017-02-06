@@ -335,6 +335,7 @@ def checkResults(namespace, time_out, pid):
     while (time.time() <= time_finish):
         lastResults = getResults(namespace, 10)
         if(len(lastResults) == 0):
+            time.sleep(5)
             continue
         if(lastResults[len(lastResults)]['accuracy'] == 1):
             logger.info('Resultados: ')
