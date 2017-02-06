@@ -377,6 +377,8 @@ def getResults(namespace, numberResults):
     # results = map(split('\t'),results)
     results = list(map(methodcaller("split"), results))
 
+    logger.info(results)
+
     if(len(results)==0):
         return []
 
