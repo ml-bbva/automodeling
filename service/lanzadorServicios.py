@@ -331,19 +331,18 @@ def startKafka(namespace):
 
 
 def checkResults(namespace, time_out, pid):
-    time_start = time.time()
-    time_finish = time_start + time_out
+    time_finish = time.time() + time_out
     while (time.time() <= time_finish):
-        lastResults = getResults(namespace,10)
+        lastResults = getResults(namespace, 10)
         if(len(lastResults) == 0):
             continue
         if(lastResults[len(lastResults)]['accuracy'] == 1):
             logger.info('Resultados: ')
             logger.info(lastResults)
-            rm_namespace(namespace,pid)
-        #elif()
+            rm_namespace(namespace, pid)
+        # elif()
         time.sleep(5)
-    rm_namespace(namespace,pid)
+    rm_namespace(namespace, pid)
 
 
 def rm_namespace(namespace, pid):
@@ -386,7 +385,7 @@ def getResults(namespace, numberResults):
     resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
 
     return resultsList
-    
+
     # logger.info("Ejecutando cat directamente:")
     # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
