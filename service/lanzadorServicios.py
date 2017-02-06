@@ -374,17 +374,12 @@ def getResults(namespace, numberResults):
     logger.info(out)
 
     results = str(out).split('\n')
-    # results = map(split('\t'),results)
     results = list(map(methodcaller("split"), results))[:-1]
-
-    logger.info(results)
 
     if(len(results)<=1):
         return []
 
     resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
-
-    logger.info(resultsList)
 
     return resultsList
 
