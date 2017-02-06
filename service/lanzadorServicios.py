@@ -343,6 +343,7 @@ def checkResults(namespace, time_out, pid):
             rm_namespace(namespace,pid)
         #elif()
         time.sleep(5)
+    rm_namespace(namespace,pid)
 
 
 def rm_namespace(namespace, pid):
