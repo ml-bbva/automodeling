@@ -379,7 +379,7 @@ def getResults(namespace, numberResults):
 
     logger.info(results)
 
-    if(len(results)==0):
+    if(len(results)<=1):
         return []
 
     logger.info(results)
