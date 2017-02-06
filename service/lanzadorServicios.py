@@ -337,7 +337,7 @@ def checkResults(namespace, time_out, pid):
         if(len(lastResults) == 0):
             time.sleep(5)
             continue
-        if(lastResults[len(lastResults)]['accuracy'] == 1):
+        if(lastResults[len(lastResults)-1]['accuracy'] == 1):
             logger.info('Resultados: ')
             logger.info(lastResults)
             rm_namespace(namespace, pid)
