@@ -301,20 +301,6 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
         cont = cont + 1
 
 
-def checkResults(namespace, time_out, pid):
-    time_start = time.time()
-    time_finish = time_start + time_out
-    while (time.time() <= time_finish):
-        lastResults = getResults(namespace,10)
-        #if(lastResults[len(lastResults)]['accuracy'] == 1):
-        #    logger.info('Resultados: ' + lastResults)
-        #    rm_namespace(namespace,pid)
-        #elif()
-        time.sleep(5)
-
-
-
-
 def create_namespace(namespace):
     # Crea un namespace con el nombre dado
     global namespaces_running
@@ -342,6 +328,21 @@ def startKafka(namespace):
         pid = kafkaConsumer.pid
         logger.info(pid)
     return pid
+
+
+def checkResults(namespace, time_out, pid):
+    time_start = time.time()
+    time_finish = time_start + time_out
+    while (time.time() <= time_finish):
+        lastResults = getResults(namespace,10)
+        if(len(lastResults) == 0):
+            continue
+        if(lastResults[len(lastResults)]['accuracy'] == 1):
+            logger.info('Resultados: ')
+            logger.info(lastResults)
+            rm_namespace(namespace,pid)
+        #elif()
+        time.sleep(5)
 
 
 def rm_namespace(namespace, pid):
@@ -377,9 +378,7 @@ def getResults(namespace, numberResults):
 
     logger.info(results)
 
-    resultsList = []
-
-    #resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
+    resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
 
     return resultsList
     
