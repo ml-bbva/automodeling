@@ -1,9 +1,9 @@
 # coding=utf-8
 # import json
-import sys
+# import sys
 import requests
 import itertools
-from subprocess import call, Popen, PIPE
+from subprocess import Popen, PIPE
 import threading
 import yaml
 import numpy
@@ -79,7 +79,8 @@ entradas = yaml.load(entradas.text)
 logger.info('Obtenido el fichero de configuracion para los parametros')
 logger.debug(entradas)
 
-# Obtenemos parametros time_out y namespaces_limit que son globales para todos los stacks
+# Obtenemos parametros time_out y namespaces_limit que son
+# globales para todos los stacks
 time_out = entradas["time_out"]
 namespaces_limit = entradas["limit_namespaces"]
 
@@ -93,11 +94,14 @@ def main():
 
     for catalog in catalogs:
         logger.info(catalog)
-        files, url, url_catalog = getConfiguration(configuration=entradas["catalog_services"][catalog])
+        files, url, url_catalog = getConfiguration(
+                configuration=entradas["catalog_services"][catalog])
         configurateKubectl(rancher_url=url)
         os.system('./exec/kubectl version')
-        parametros_nombre, parametros = getDefinedParams(entradas["catalog_services"][catalog]['PARAMS'])
-        parametros_nombre, parametros = addDefaultParams(parametros_nombre, parametros)
+        parametros_nombre, parametros = getDefinedParams(
+                entradas["catalog_services"][catalog]['PARAMS'])
+        parametros_nombre, parametros = addDefaultParams(
+                parametros_nombre, parametros)
         launchExperiments(
                 files=files,
                 catalog_name=catalog,
@@ -124,7 +128,8 @@ def prepareDirectories():
 
 
 def getConfiguration(configuration):
-    # Extrae de un yaml toda la configuracion para el lanzador de namespaces y la organiza
+    # Extrae de un yaml toda la configuracion para el lanzador
+    # de namespaces y la organiza
 
     # Peticion a la API para obtener el dockercompose
     url_catalog = configuration["URL_API"]
@@ -138,7 +143,7 @@ def getConfiguration(configuration):
     # Obtención de los ficheros de los servicios que hay que arrancar
     files = content_all['files']
 
-    # En esta parte, se obtienen de la API todos los ficheros que se van a arrancar
+    # Se obtienen de la API todos los ficheros que se van a arrancar
     # Se guardan en la carpeta ./files, que se ha creado antes
     for file in files:
         name_file = file
@@ -166,7 +171,7 @@ def configurateKubectl(rancher_url):
         logger.debug('Plantilla del config\n' + text)
         kubeConfig = yaml.load(text)
 
-    # rancher_url = https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
+    # https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
     kubeConfig['clusters'][0]['cluster']['server'] = rancher_url
     kubeConfig['users'][0]['user']['username'] = access_key
     kubeConfig['users'][0]['user']['password'] = secret_key
@@ -185,16 +190,17 @@ def getDefinedParams(parametros_yml):
     # Las distintas formas que se consideran son: parametroNombre->n
     # 1. [valorInicial:valorFinal:Salto] -> Lineal
     # 2. TODO: [valorInicial:valorFinal:Función] -> Otro tipo de funcion
-    # 3. TODO: HIDDEN_SIZE deberia aceptar tambien parametros que no fueran absolute
+    # 3. TODO: HIDDEN_SIZE deberia aceptar parametros que no fueran absolute
     for parametro in parametros_yml:
         logger.info(parametro)
         parametros_nombre.append(parametro)
         # Obtiene el parametro HIDDEN_SIZE, que es especial
-        if(parametro=='HIDDEN_SIZE'):
-            layers = [parametros_yml[parametro]['number_units'] for i in range(parametros_yml[parametro]['number_layers'][0])]
+        if(parametro == 'HIDDEN_SIZE'):
+            layers = [parametros_yml[parametro]['number_units'] for i in range(
+                    parametros_yml[parametro]['number_layers'][0])]
             combinations = []
             for combination in itertools.product(*layers):
-                combination = ','.join(map(str,combination))
+                combination = ','.join(map(str, combination))
                 combinations.append(combination)
             parametros.append(combinations)
             continue
@@ -205,7 +211,8 @@ def getDefinedParams(parametros_yml):
             valorInicial = parametros_yml[parametro]['initial-value']
             valorFinal = parametros_yml[parametro]["final-value"]
             valorSalto = parametros_yml[parametro]["interval"]
-            opcionesParametro = numpy.arange(valorInicial, valorFinal, valorSalto)
+            opcionesParametro = numpy.arange(
+                    valorInicial, valorFinal, valorSalto)
             parametros.append(opcionesParametro.tolist())
         elif(opcion == 2):
             # opcionesParametro
@@ -231,7 +238,9 @@ def addDefaultParams(parametros_nombre, parametros):
     questions = rancherComposeContent['.catalog']['questions']
 
     for element in questions:
-        if(element['variable'] in parametros_nombre or element['variable']=='NAMESPACE' or element['variable']=='ROOT_TOPIC'):
+        if(element['variable'] in parametros_nombre
+                or element['variable'] == 'NAMESPACE'
+                or element['variable'] == 'ROOT_TOPIC'):
             continue
         else:
             parametros_nombre.append(element['variable'])
@@ -246,7 +255,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
     # Iteracion para lanzar las combinaciones entre los parametros de entrada
     global namespaces_running
     cont = 1
-    threads = []
+    # threads = []
     threadsCheckResults = []
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
@@ -268,7 +277,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
                     text = text.replace(
                         '${' + parametros_nombre[index] + '}',
                         str(param[index]))
-                # If there is not a Namespace in the paremetres it's set by default
+                # Set by default the namespace
                 text = text.replace(
                     '${' + 'NAMESPACE' + '}',
                     namespace)
@@ -285,17 +294,20 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
         # Llamadas a kubectl
         # Se crea un namespace por cada combinacion
         create_namespace(namespace)
-        # Por cada fichero en ./files, se lanza un start_service dentro de un namespace
+        # Por cada fichero en ./files, se lanza un start_service
+        # dentro de un namespace
         for file in files:
             if(file != 'rancher-compose.yml'):
                 start_service(namespace, './files/launch/' + file)
 
         pid = startKafka(namespace)
 
-        #threads.append(threading.Timer(time_out, rm_namespace, args=[namespace, pid]))
-        #threads[cont-1].start()
+        # threads.append(threading.Timer(
+        #        time_out, rm_namespace, args=[namespace, pid]))
+        # threads[cont-1].start()
 
-        threadsCheckResults.append(threading.Thread(target=checkResults, args=[namespace,time_out,pid]))
+        threadsCheckResults.append(threading.Thread(
+                target=checkResults, args=[namespace, time_out, pid]))
         threadsCheckResults[cont-1].start()
 
         cont = cont + 1
@@ -309,8 +321,10 @@ def create_namespace(namespace):
 
 
 def start_service(namespace, serviceFile):
-    logger.info('Lanzando servicio ' + serviceFile + ' en el namespace ' + namespace)
-    os.system('./exec/kubectl --namespace=' + namespace + ' create -f ' + serviceFile)
+    logger.info('Lanzando servicio ' +
+                serviceFile + ' en el namespace ' + namespace)
+    os.system('./exec/kubectl --namespace=' + namespace +
+              ' create -f ' + serviceFile)
 
 
 def startKafka(namespace):
@@ -369,7 +383,10 @@ def rm_namespace(namespace, pid):
 def getResults(namespace, numberResults):
     # Obtiene el resultado del numero de lineas especificadas como parametro
     process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
-    process2 = Popen(['tail', '-'+str(numberResults)], stdin=process1.stdout, stdout=PIPE)
+    process2 = Popen(
+            ['tail', '-'+str(numberResults)],
+            stdin=process1.stdout,
+            stdout=PIPE)
     (out, err) = process2.communicate()
     out = out.decode('UTF-8')
     logger.info(out)
@@ -377,10 +394,11 @@ def getResults(namespace, numberResults):
     results = str(out).split('\n')
     results = list(map(methodcaller("split"), results))[:-1]
 
-    if(len(results)<=1):
+    if(len(results) <= 1):
         return []
 
-    resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
+    resultsList = [{'cost': float(result[3]),
+                    'accuracy': float(result[4])} for result in results]
 
     return resultsList
 
