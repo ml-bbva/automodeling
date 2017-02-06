@@ -337,7 +337,7 @@ def checkResults(namespace, time_out, pid):
         if(len(lastResults) == 0):
             time.sleep(5)
             continue
-        if(lastResults[len(lastResults)-1]['accuracy'] == 1):
+        if(lastResults[len(lastResults)-1]['accuracy'] == 1.0):
             logger.info('Resultados: ')
             logger.info(lastResults)
             rm_namespace(namespace, pid)
@@ -382,8 +382,9 @@ def getResults(namespace, numberResults):
     if(len(results)<=1):
         return []
 
-    logger.info(results)
     resultsList = [{'cost': float(result[3]), 'accuracy': float(result[4])} for result in results]
+
+    logger.info(resultsList)
 
     return resultsList
 
