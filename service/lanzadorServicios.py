@@ -93,6 +93,8 @@ def main():
         logger.info('Creado fichero de resultados vacio')
         #dicempty = {}
         #json.dump(dicempty, f)
+        arrayempty = []
+        json.dump(arrayempty, f)
     catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
     logger.info(catalogs)
     param_record = {}
@@ -399,7 +401,8 @@ def checkResults(namespace, time_out, pid):
     with open('./results/global_results.json', 'r+') as json_file:
         json_obj = json.load(json_file)
         logger.info(data)
-        json_obj.update(data)
+        #json_obj.update(data)
+        json_obj.append(data)
         logger.info(json_obj)
         json.dump(json_obj, json_file)
     access_flag.clear()
