@@ -398,7 +398,9 @@ def checkResults(namespace, time_out, pid):
     access_flag.set()
     with open('./results/global_results.json', 'r+') as json_file:
         json_obj = json.load(json_file)
+        logger.info(data)
         json_obj.update(data)
+        logger.info(json_obj)
         json.dump(json_obj, json_file)
     access_flag.clear()
 
