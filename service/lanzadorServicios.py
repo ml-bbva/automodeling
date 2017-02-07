@@ -91,6 +91,8 @@ def main():
     prepareDirectories()
     with open('./results/global_results.json', 'w') as f:
         logger.debug('Creado fichero de resultados vacio')
+        dicempty = {}
+        json.dump(dicempty, f)
     catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
     logger.info(catalogs)
     param_record = {}
