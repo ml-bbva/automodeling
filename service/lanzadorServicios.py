@@ -85,6 +85,7 @@ time_out = entradas["time_out"]
 namespaces_limit = entradas["limit_namespaces"]
 access_flag = threading.Event()
 
+
 def main():
     print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
     prepareDirectories()
@@ -115,20 +116,19 @@ def main():
 
 def prepareDirectories():
     if(os.path.isdir('./logs')):
-        # os.rmdir("./logs")
         shutil.rmtree('./logs')
     os.mkdir("./logs")
 
     if(os.path.isdir('./files')):
-        # os.rmdir("./files")
         shutil.rmtree('./files')
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
     if(os.path.isdir('./results')):
-        # os.rmdir('./results')
         shutil.rmtree('./results')
     os.mkdir("./results")
+    os.mknod("./results/global_results.json", 0666)
+
 
 
 def getConfiguration(configuration):
@@ -395,12 +395,12 @@ def checkResults(namespace, time_out, pid):
     if access_flag.isSet():
         access_flag.wait()
     access_flag.set()
-    with open('./results/global_results.json', 'r') as json_file:
+    with open('./results/global_results.json', 'r+') as json_file:
         json_obj = json.load(json_file)
-    json_obj.update(data)
-    with open('./results/global_results.json', 'w') as json_file:
+        json_obj.update(data)
         json.dump(json_obj, json_file)
     access_flag.clear()
+
 
 def getResults(namespace, numberResults):
     # Obtiene el resultado del numero de lineas especificadas como parametro
