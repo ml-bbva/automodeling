@@ -89,7 +89,8 @@ access_flag = threading.Event()
 def main():
     print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
     prepareDirectories()
-
+    with open('./results/global_results.json', 'w') as f:
+        logger.debug('Creado fichero de resultados vacio')
     catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
     logger.info(catalogs)
     param_record = {}
@@ -127,8 +128,6 @@ def prepareDirectories():
     if(os.path.isdir('./results')):
         shutil.rmtree('./results')
     os.mkdir("./results")
-    os.mknod("./results/global_results.json", 0666)
-
 
 
 def getConfiguration(configuration):
