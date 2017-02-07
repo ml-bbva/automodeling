@@ -1,5 +1,5 @@
 # coding=utf-8
-# import json
+import json
 # import sys
 import requests
 import itertools
@@ -83,7 +83,7 @@ logger.debug(entradas)
 # globales para todos los stacks
 time_out = entradas["time_out"]
 namespaces_limit = entradas["limit_namespaces"]
-
+access_flag = threading.Event()
 
 def main():
     print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
@@ -91,6 +91,7 @@ def main():
 
     catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
     logger.info(catalogs)
+    param_record = {}
 
     for catalog in catalogs:
         logger.info(catalog)
@@ -102,11 +103,14 @@ def main():
                 entradas["catalog_services"][catalog]['PARAMS'])
         parametros_nombre, parametros = addDefaultParams(
                 parametros_nombre, parametros)
-        launchExperiments(
-                files=files,
-                catalog_name=catalog,
-                parametros=parametros,
-                parametros_nombre=parametros_nombre)
+        param_record[catalog] = launchExperiments(
+                    files=files,
+                    catalog_name=catalog,
+                    parametros=parametros,
+                    parametros_nombre=parametros_nombre)
+
+    with open('./results/parameter_record.json', 'w') as outfile:
+        json.dump(param_record, outfile)
 
 
 def prepareDirectories():
@@ -257,6 +261,8 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
     cont = 1
     # threads = []
     threadsCheckResults = []
+    param_record = {}
+
     # Se guardan los parametros en el fichero answers.txt
     for param in itertools.product(*parametros):
         # Substitucion de las variables en los ficheros
@@ -265,11 +271,12 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
 
         # El namespace no admite mayusculas
         namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
-
+        param_record[namespace] = {}
         for file_name in files:
             if(file_name != 'rancher-compose.yml'):
                 with open('./files/' + file_name, 'r') as f:
                     text = f.read()
+
                 for index in range(len(parametros_nombre)):
                     logger.info(
                         parametros_nombre[index] + '=' +
@@ -277,6 +284,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
                     text = text.replace(
                         '${' + parametros_nombre[index] + '}',
                         str(param[index]))
+                    param_record[namespace][parametros_nombre[index]] = param[index]
                 # Set by default the namespace
                 text = text.replace(
                     '${' + 'NAMESPACE' + '}',
@@ -290,7 +298,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
         while(namespaces_running >= namespaces_limit):
             continue
 
-        logger.info('Preparado para lanzar namespaces')
+        logger.info('Preparado para lanzar namespace ' + namespace)
         # Llamadas a kubectl
         # Se crea un namespace por cada combinacion
         create_namespace(namespace)
@@ -312,12 +320,33 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
 
         cont = cont + 1
 
+    return param_record
+
 
 def create_namespace(namespace):
     # Crea un namespace con el nombre dado
     global namespaces_running
     os.system('./exec/kubectl create namespace ' + namespace)
     namespaces_running += 1
+
+
+def rm_namespace(namespace, pid):
+    # Borra el namespace con el nombre dado y su contenido
+    global namespaces_running
+    # Mata el proceso kafka
+    killProcess(pid)
+    # Llama a kafka para obtener los resultados
+    getResults(namespace, 1)
+    # Delete namespace content
+    os.system(
+        './exec/kubectl delete ' +
+        '--all service,rc,ingress,pod --namespace=' +
+        namespace +
+        ' --now'
+    )
+    # Delete the namespace itself
+    os.system('./exec/kubectl delete namespace ' + namespace)
+    namespaces_running -= 1
 
 
 def start_service(namespace, serviceFile):
@@ -345,6 +374,7 @@ def startKafka(namespace):
 
 
 def checkResults(namespace, time_out, pid):
+    global access_flag
     time_finish = time.time() + time_out
     while (time.time() <= time_finish):
         lastResults = getResults(namespace, 10)
@@ -360,25 +390,17 @@ def checkResults(namespace, time_out, pid):
         time.sleep(5)
     rm_namespace(namespace, pid)
 
+    data = {namespace: lastResults}
 
-def rm_namespace(namespace, pid):
-    # Borra el namespace con el nombre dado y su contenido
-    global namespaces_running
-    # Mata el proceso kafka
-    killProcess(pid)
-    # Llama a kafka para obtener los resultados
-    getResults(namespace, 1)
-    # Delete namespace content
-    os.system(
-        './exec/kubectl delete ' +
-        '--all service,rc,ingress,pod --namespace=' +
-        namespace +
-        ' --now'
-    )
-    # Delete the namespace itself
-    os.system('./exec/kubectl delete namespace ' + namespace)
-    namespaces_running -= 1
+    if access_flag.isSet():
+        access_flag.wait()
+    access_flag.set()
 
+    with open('./results/global_results.json', 'r+') as json_file:
+        json_obj = json.load(json_file)
+        json_obj.update(data)
+        json.dump(json_obj, json_file)
+    access_flag.clear()
 
 def getResults(namespace, numberResults):
     # Obtiene el resultado del numero de lineas especificadas como parametro
