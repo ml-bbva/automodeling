@@ -338,7 +338,7 @@ def checkResults(namespace, time_out, pid):
             time.sleep(5)
             continue
         if(lastResults[len(lastResults)-1]['accuracy'] == 1.0):
-            logger.info('Resultados: ')
+            logger.info('Resultados:')
             logger.info(lastResults)
             rm_namespace(namespace, pid)
             return
