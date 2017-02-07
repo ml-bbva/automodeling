@@ -395,10 +395,10 @@ def checkResults(namespace, time_out, pid):
     if access_flag.isSet():
         access_flag.wait()
     access_flag.set()
-
-    with open('./results/global_results.json', 'r+') as json_file:
+    with open('./results/global_results.json', 'r') as json_file:
         json_obj = json.load(json_file)
-        json_obj.update(data)
+    json_obj.update(data)
+    with open('./results/global_results.json', 'w') as json_file:
         json.dump(json_obj, json_file)
     access_flag.clear()
 
