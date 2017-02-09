@@ -311,6 +311,7 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
             if(file != 'rancher-compose.yml'):
                 start_service(namespace, './files/launch/' + file)
 
+
         pid = startKafka(namespace)
 
         # threads.append(threading.Timer(
@@ -396,10 +397,12 @@ def checkResults(namespace, time_out, pid):
     data = {namespace: lastResults}
 
     if access_flag.isSet():
+        logger.info("No deberia entrar aqui")
         access_flag.wait()
     access_flag.set()
     with open('./results/global_results.json', 'r+') as json_file:
         json_obj = json.load(json_file)
+        logger.info('Guardando resultados:')
         logger.info(data)
         #json_obj.update(data)
         json_obj.append(data)
