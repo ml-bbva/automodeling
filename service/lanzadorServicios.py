@@ -380,6 +380,8 @@ def startKafka(namespace):
 def checkResults(namespace, time_out, pid):
     global access_flag
     time_finish = time.time() + time_out
+    last_time = time.time()
+    start_time = last_time
     while (time.time() <= time_finish):
         lastResults = getResults(namespace, 10)
         if(len(lastResults) == 0):
@@ -392,9 +394,13 @@ def checkResults(namespace, time_out, pid):
             return
         # elif()
         time.sleep(5)
+        last_time = time.time()
+
     rm_namespace(namespace, pid)
 
-    data = {namespace: lastResults}
+    # TODO: Include time in the lastResutls
+
+    data = {namespace: {'time': last_time - start_time, 'Results': lastResults}}
 
     if access_flag.isSet():
         logger.info("No deberia entrar aqui")
