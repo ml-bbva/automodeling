@@ -400,11 +400,11 @@ def checkResults(namespace, time_out, pid):
         logger.info("No deberia entrar aqui")
         access_flag.wait()
     access_flag.set()
-    with open('./results/global_results.json', 'r+') as json_file:
+    with open('./results/global_results.json', 'r') as json_file:
         json_obj = json.load(json_file)
+    with open('./results/global_results.json', 'w') as json_file:
         logger.info('Guardando resultados:')
         logger.info(data)
-        #json_obj.update(data)
         json_obj.append(data)
         logger.info(json_obj)
         json.dump(json_obj, json_file)
