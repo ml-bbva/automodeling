@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: experiment-launcher
+spec:
+  clusterIP: None
+  ports:
+    - port: 5000
+  selector:
+    app: experiment-launcher

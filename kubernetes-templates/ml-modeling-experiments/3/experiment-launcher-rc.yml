@@ -22,7 +22,7 @@ spec:
         - "sh"
         args:
         - -c
-        - python ./webApp/server.py &; python ./launcherApp/lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key}; sleep infinity
+        - python ./launcherApp/lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key}; sleep infinity
         image: automodeling/automodeling:latest
         ports:
             - containerPort: 5000
