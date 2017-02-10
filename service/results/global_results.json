@@ -1,1 +1,1 @@
-[{"catalog1model1": []}, {"catalog1model2": []}]
+[{"catalog1model1": {"Results": [{"cost": 0.49629897, "accuracy": 1.0}, {"cost": 0.54602039, "accuracy": 0.97500002}, {"cost": 0.47345394, "accuracy": 0.97500002}, {"cost": 0.44086462, "accuracy": 1.0}, {"cost": 0.47317678, "accuracy": 0.875}, {"cost": 0.45067906, "accuracy": 1.0}, {"cost": 0.45353156, "accuracy": 0.94999999}, {"cost": 0.44781438, "accuracy": 1.0}, {"cost": 0.43795642, "accuracy": 0.97500002}, {"cost": 0.39518219, "accuracy": 0.94999999}], "time": 60.18646597862244}}]

@@ -380,7 +380,7 @@ def checkResults(namespace, time_out, pid):
     global access_flag
     time_finish = time.time() + time_out
     last_time = time.time()
-    start_time = last_time
+    start_time = time.time()
     while (time.time() <= time_finish):
         lastResults = getResults(namespace, 10)
         if(len(lastResults) == 0):
@@ -430,12 +430,12 @@ def getResults(namespace, numberResults):
 
     if(len(results) <= 1):
         return []
-
+    
     resultsList = [{'cost': float(result[3]),
                     'accuracy': float(result[4])} for result in results]
-
+    
     return resultsList
-
+    
     # logger.info("Ejecutando cat directamente:")
     # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
