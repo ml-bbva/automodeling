@@ -7,6 +7,7 @@ app = Flask(__name__)
 @app.route('/')
 def getResults():
 	with open('./../launcherApp/results/global_results.json', 'r') as f:
+	with open('/usr/src/myapp')
 		results = json.load(f)
 	return json2html.json2html.convert(json=results)
 

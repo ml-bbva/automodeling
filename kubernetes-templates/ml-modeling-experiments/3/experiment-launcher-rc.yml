@@ -26,7 +26,7 @@ spec:
         image: automodeling/automodeling:latest
         imagePullPolicy: Always
         volumeMounts:
-        - mountPath: /results-launcher
+        - mountPath: /usr/src/myapp/results
           name: results-volume
       - name: webapp
         command:
@@ -39,9 +39,8 @@ spec:
         ports:
           - containerPort: 5000
         volumeMounts:
-        - mountPath: /results-launcher
+        - mountPath: /usr/src/myapp
           name: results-volume
       volumes:
       - name: results-volume
-        hostPath:
-          path: /results-automodeling
+        emptyDir: {}
