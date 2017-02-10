@@ -1,0 +1,17 @@
+.catalog:
+    name: "Experiments Launcher"
+    version: "v1.0-Web"
+    description: "Atomatic launcher for services in the catalog with diferent configurations. Web interface for visualization"
+    questions:
+        - variable: "access_key"
+          label: "Access key for Rancher"
+          required: true
+          type: "string"
+        - variable: "secret_key"
+          label: "Secret key for Rancher"
+          required: true
+          type: "string"
+        - variable: "url_entradas"
+          label: "Url where the yaml file with the configuration parametres is located."
+          required: true
+          type: "string"

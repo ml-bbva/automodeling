@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: experiment-launcher
+  name: experiment-launcher
+spec:
+  replicas: 1
+  selector:
+    service: experiment-launcher
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.rancher.container.start_once: "true"
+        service: experiment-launcher
+    spec:
+      containers:
+      -
+        command:
+        - "sh"
+        args:
+        - -c
+        - python ./webApp/server.py &; python ./launcherApp/lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key}; sleep infinity
+        image: automodeling/automodeling:latest
+        ports:
+            - containerPort: 5000
+        imagePullPolicy: Always
+        name: experiment-launcher
