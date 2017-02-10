@@ -120,9 +120,6 @@ def main():
 
 
 def prepareDirectories():
-    if(os.path.isdir('./logs')):
-        shutil.rmtree('./logs')
-    os.mkdir("./logs")
 
     if(os.path.isdir('./files')):
         shutil.rmtree('./files')
@@ -430,12 +427,12 @@ def getResults(namespace, numberResults):
 
     if(len(results) <= 1):
         return []
-    
+
     resultsList = [{'cost': float(result[3]),
                     'accuracy': float(result[4])} for result in results]
-    
+
     return resultsList
-    
+
     # logger.info("Ejecutando cat directamente:")
     # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
