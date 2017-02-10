@@ -7,4 +7,4 @@ spec:
   ports:
     - port: 5000
   selector:
-    app: experiment-launcher
+    service: experiment-launcher
