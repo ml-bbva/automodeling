@@ -17,14 +17,31 @@ spec:
         service: experiment-launcher
     spec:
       containers:
-      -
+      - name: experiment-launcher
         command:
         - "sh"
         args:
         - -c
-        - python ./launcherApp/lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key}; sleep infinity
+        - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key}; sleep infinity
         image: automodeling/automodeling:latest
-        ports:
-            - containerPort: 5000
         imagePullPolicy: Always
-        name: experiment-launcher
+        volumeMounts:
+        - mountPath: /results-launcher
+          name: results-volume
+      - name: webApp
+        command:
+        - "sh"
+        args:
+        - "-c"
+        - "python server.py"
+        image: automodeling/webApp:latest
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 5000
+        volumeMounts:
+        - mountPath: /results-launcher
+          name: results-volume
+      volumes:
+      - name: results-volume
+        hostPath:
+          path: /results-automodeling
