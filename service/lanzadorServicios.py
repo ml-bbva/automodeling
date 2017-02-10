@@ -391,7 +391,6 @@ def checkResults(namespace, time_out, pid):
             logger.info('Resultados:')
             logger.info(lastResults)
             rm_namespace(namespace, pid)
-            return
         # elif()
         time.sleep(5)
         last_time = time.time()
