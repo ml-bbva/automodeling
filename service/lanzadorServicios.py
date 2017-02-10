@@ -311,7 +311,6 @@ def launchExperiments(files, catalog_name, parametros, parametros_nombre):
             if(file != 'rancher-compose.yml'):
                 start_service(namespace, './files/launch/' + file)
 
-
         pid = startKafka(namespace)
 
         # threads.append(threading.Timer(
@@ -390,8 +389,7 @@ def checkResults(namespace, time_out, pid):
         if(lastResults[len(lastResults)-1]['accuracy'] == 1.0):
             logger.info('Resultados:')
             logger.info(lastResults)
-            rm_namespace(namespace, pid)
-        # elif()
+            break
         time.sleep(5)
         last_time = time.time()
 
