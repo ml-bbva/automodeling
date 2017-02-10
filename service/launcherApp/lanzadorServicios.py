@@ -126,9 +126,9 @@ def prepareDirectories():
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
-    if(os.path.isdir('./results')):
-        shutil.rmtree('./results')
-    os.mkdir("./results")
+    #if(os.path.isdir('./results')):
+    #    shutil.rmtree('./results')
+    #os.mkdir("./results")
 
 
 def getConfiguration(configuration):
