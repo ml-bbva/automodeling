@@ -3,3 +3,4 @@ RUN pip install flask json2html
 EXPOSE 5000
 COPY $PWD /usr/src/myapp
 WORKDIR /usr/src/myapp
+RUN mkdir results

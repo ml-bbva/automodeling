@@ -39,7 +39,7 @@ spec:
         ports:
           - containerPort: 5000
         volumeMounts:
-        - mountPath: /usr/src/myapp
+        - mountPath: /usr/src/myapp/results
           name: results-volume
       volumes:
       - name: results-volume
