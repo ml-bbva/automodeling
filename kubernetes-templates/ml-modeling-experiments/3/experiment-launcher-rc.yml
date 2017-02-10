@@ -28,7 +28,7 @@ spec:
         volumeMounts:
         - mountPath: /results-launcher
           name: results-volume
-      - name: webApp
+      - name: webapp
         command:
         - "sh"
         args:
