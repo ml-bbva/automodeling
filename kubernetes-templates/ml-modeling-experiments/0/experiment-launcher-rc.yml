@@ -23,6 +23,6 @@ spec:
         args:
         - -c
         - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key} --info; sleep infinity
-        image: automodeling/automodeling:latest
+        image: automodeling/automodeling:1.2.0
         imagePullPolicy: Always
         name: experiment-launcher
