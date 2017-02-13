@@ -428,7 +428,7 @@ def getResults(namespace, numberResults):
 
     if(len(results) <= 1):
         return []
-
+    logger.info(results)
     resultsList = [{'cost': float(result[3]),
                     'accuracy': float(result[4])} for result in results[1:]]
     logger.info(resultsList)
