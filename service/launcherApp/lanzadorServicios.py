@@ -379,6 +379,7 @@ def checkResults(namespace, time_out, pid):
     last_time = time.time()
     start_time = time.time()
     while (time.time() <= time_finish):
+        logger.info('Está en le bucle de acceso a resultados')
         lastResults = getResults(namespace, 10)
         if(len(lastResults) == 0):
             time.sleep(5)
@@ -391,13 +392,13 @@ def checkResults(namespace, time_out, pid):
         last_time = time.time()
 
     rm_namespace(namespace, pid)
+    logger.info('Debería pasar por aquí para guardar los resultados')
 
     # TODO: Include time in the lastResutls
 
     data = {namespace: {'time': last_time - start_time, 'Results': lastResults}}
 
     if access_flag.isSet():
-        logger.info("No deberia entrar aqui")
         access_flag.wait()
     access_flag.set()
     with open('./results/global_results.json', 'r') as json_file:
@@ -427,10 +428,10 @@ def getResults(namespace, numberResults):
 
     if(len(results) <= 1):
         return []
-    logger.info(results)
+
     resultsList = [{'cost': float(result[3]),
                     'accuracy': float(result[4])} for result in results[1:]]
-
+    logger.info(resultsList)
     return resultsList
 
     # logger.info("Ejecutando cat directamente:")
