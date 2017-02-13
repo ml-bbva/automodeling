@@ -420,14 +420,14 @@ def getResults(namespace, numberResults):
             stdout=PIPE)
     (out, err) = process2.communicate()
     out = out.decode('UTF-8')
-    logger.info(out)
+    #logger.info(out)
 
     results = str(out).split('\n')
     results = list(map(methodcaller("split"), results))[:-1]
 
     if(len(results) <= 1):
         return []
-    
+    #logger.info(results)
     resultsList = [{'cost': float(result[3]),
                     'accuracy': float(result[4])} for result in results[1:]]
 
