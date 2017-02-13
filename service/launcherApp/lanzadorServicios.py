@@ -14,6 +14,7 @@ import argparse
 import shutil
 from operator import methodcaller
 import time
+import re
 
 # TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
@@ -382,13 +383,13 @@ def checkResults(namespace, time_out, pid):
         logger.info('Está en le bucle de acceso a resultados')
         lastResults = getResults(namespace, 10)
         if(len(lastResults) == 0):
-            time.sleep(5)
+            time.sleep(10)
             continue
         if(lastResults[len(lastResults)-1]['accuracy'] == 1.0):
             logger.info('Resultados:')
             logger.info(lastResults)
             break
-        time.sleep(5)
+        time.sleep(10)
         last_time = time.time()
 
     rm_namespace(namespace, pid)
@@ -421,16 +422,30 @@ def getResults(namespace, numberResults):
             stdout=PIPE)
     (out, err) = process2.communicate()
     out = out.decode('UTF-8')
-    #logger.info(out)
-
-    results = str(out).split('\n')
-    results = list(map(methodcaller("split"), results))[:-1]
+    logger.info(out)
+    
+    results = str(out).split('\n')[:-1]
+    logger.info(results)
 
     if(len(results) <= 1):
         return []
+    
+    prog = re.compile('[(\d|\.)+\s]+')
+    if(not (prog.match(results[len(results)-1]) and prog.match(results[0]))):
+        logger.info("No es el formato")
+        logger.info(results[0])
+        logger.info(results[len(results)-1])
+        return []
+
+    results = list(map(methodcaller("split"), results))
+
+    if(len(results) <= 1):
+        return []
+
+
     logger.info(results)
     resultsList = [{'cost': float(result[3]),
-                    'accuracy': float(result[4])} for result in results[1:]]
+                    'accuracy': float(result[4])} for result in results]
     logger.info(resultsList)
     return resultsList
 

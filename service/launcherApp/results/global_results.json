@@ -1,1 +1,1 @@
-[{"catalog1model1": {"Results": [{"cost": 0.37726685, "accuracy": 0.97500002}, {"cost": 0.38713428, "accuracy": 0.97500002}, {"cost": 0.35342914, "accuracy": 1.0}, {"cost": 0.34835261, "accuracy": 1.0}, {"cost": 0.38006267, "accuracy": 0.97500002}, {"cost": 0.35882086, "accuracy": 0.94999999}, {"cost": 0.33345833, "accuracy": 0.97500002}, {"cost": 0.31310672, "accuracy": 1.0}, {"cost": 0.29624042, "accuracy": 1.0}], "time": 55.43650197982788}}]
+[{"catalog1model1": {"Results": [], "time": 0.0}}]
