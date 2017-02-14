@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from automodeling_web import views as automodeling_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^automodeling/', automodeling_views.results),
 ]
