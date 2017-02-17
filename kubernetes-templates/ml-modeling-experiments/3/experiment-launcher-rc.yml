@@ -41,16 +41,6 @@ spec:
         volumeMounts:
         - mountPath: /usr/src/myapp/results
           name: results-volume
-      - name: arango-db
-        image: arangodb
-        imagePullPolicy: Always
-        ports:
-          - containerPort: 8529
-        volumeMounts:
-        - mountPath: /var/lib/arangodb3
-          name: arango
       volumes:
       - name: results-volume
-        emptyDir: {}
-      - name: arango
         emptyDir: {}

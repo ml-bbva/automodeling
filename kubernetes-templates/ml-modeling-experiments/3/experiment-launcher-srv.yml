@@ -7,7 +7,5 @@ spec:
   ports:
     - name: webapp
       port: 5000
-    - name: db
-      port: 8529
   selector:
     service: experiment-launcher
