@@ -5,7 +5,7 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: webApp
+    - name: webapp
       port: 5000
     - name: db
       port: 8529
