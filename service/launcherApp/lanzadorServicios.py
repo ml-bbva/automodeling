@@ -15,6 +15,7 @@ import shutil
 from operator import methodcaller
 import time
 import re
+from dbConnection import dbConnector
 
 # TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
@@ -84,16 +85,21 @@ logger.debug(entradas)
 # globales para todos los stacks
 time_out = entradas["time_out"]
 namespaces_limit = entradas["limit_namespaces"]
-access_flag = threading.Event()
+access_flag = threading.Event()  # TODO: borrar?
 
+# DB CONNECTION
+# TODO: Set up for the database. URL, db_name, password and user.
+db = dbConnector(db_name='automodelingDB', password='HW6ToHF3cYSshtYB')
+
+# TODO: Improve the format for the documents
 
 def main():
     print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
     prepareDirectories()
     with open('./results/global_results.json', 'w') as f:
         logger.info('Creado fichero de resultados vacio')
-        #dicempty = {}
-        #json.dump(dicempty, f)
+        # dicempty = {}
+        # json.dump(dicempty, f)
         arrayempty = []
         json.dump(arrayempty, f)
     catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
@@ -115,7 +121,9 @@ def main():
                     catalog_name=catalog,
                     parametros=parametros,
                     parametros_nombre=parametros_nombre)
+        db.save_document(param_record, coll_name='parameter_records')
 
+    # TODO: Delete json things
     with open('./results/parameter_record.json', 'w') as outfile:
         json.dump(param_record, outfile)
 
@@ -399,6 +407,7 @@ def checkResults(namespace, time_out, pid):
 
     data = {namespace: {'time': last_time - start_time, 'Results': lastResults}}
 
+    # TODO: Delete json things
     if access_flag.isSet():
         access_flag.wait()
     access_flag.set()
@@ -410,6 +419,7 @@ def checkResults(namespace, time_out, pid):
         json_obj.append(data)
         logger.info(json_obj)
         json.dump(json_obj, json_file)
+    db.save_document(data, 'global_results')
     access_flag.clear()
 
 
@@ -423,13 +433,13 @@ def getResults(namespace, numberResults):
     (out, err) = process2.communicate()
     out = out.decode('UTF-8')
     logger.info(out)
-    
+
     results = str(out).split('\n')[:-1]
     logger.info(results)
 
     if(len(results) <= 1):
         return []
-    
+
     prog = re.compile('[(\d|\.)+\s]+')
     if(not (prog.match(results[len(results)-1]) and prog.match(results[0]))):
         logger.info("No es el formato")
@@ -441,7 +451,6 @@ def getResults(namespace, numberResults):
 
     if(len(results) <= 1):
         return []
-
 
     logger.info(results)
     resultsList = [{'cost': float(result[3]),

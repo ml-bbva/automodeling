@@ -1,2 +1,3 @@
-/service/files/*
-/service/logs/*
+/service/launcherApp/files/*
+/service/laucherApp/results/*
+/service/launcherApp/answers.txt
