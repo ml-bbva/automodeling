@@ -1,5 +1,10 @@
-"""Module for the db connection. Now the connection is with a Arango db."""
+"""
+Module for the db connection. Now the connection is with a Arango db.
 
+Find more info about pyArango in:
+https://www.arangodb.com/tutorials/tutorial-python/
+"""
+from pyArango.connection import Connection
 from pyArango.connection import *
 import pyArango
 
@@ -9,11 +14,16 @@ import pyArango
 class dbConnector:
     """Connects with ONLY ONE db and perform operation on it."""
 
-    def __init__(self, db_name, user='root',
+    def __init__(self, db_name, auth=False, password='', user='root',
                  arangoURL='http://127.0.0.1:8529'):
         """Init the database conection and set atributes db atribute."""
-        self.conn = Connection(username=user,
-                               arangoURL=arangoURL)
+        if auth:
+            self.conn = Connection(username=user, password=password,
+                                   arangoURL=arangoURL)
+        else:
+            self.conn = Connection(username=user,
+                                   arangoURL=arangoURL)
+
         if self.conn.hasDatabase(db_name):
             # conectartla
             self.db = pyArango.database.Database(self.conn, db_name)
@@ -22,12 +32,15 @@ class dbConnector:
             self.db = self.conn.createDatabase(name=db_name)
             # Crearla
 
-    # def __init__(self, password, db_name, user='root',
-    #              arangoURL='http://127.0.0.1:8529'):
-    #     #Init the database conection and set atributes db atribute.
-    #     self.conn = Connection(username=user, password=password,
-    #                            arangoURL=arangoURL)
-    #     self.db = connect_db(db_name)
+    def retrieve_collection(self, coll_name):  # doc, bd, coll?
+        # Posiblemente innecesario
+        """Return the collection in a list form."""
+        self.db.reload()
+        coll = self.db.collections[coll_name]
+        document_list = []
+        for document in coll.fetchAll():
+            document_list.append(document._store)
+        return document_list
 
     def save_document(self, doc, coll_name):  # doc, bd, coll?
         """
@@ -50,7 +63,7 @@ class dbConnector:
         self.db.reload()
         # FIXME: Modo cutre de encontrar documentos sin clave
         # Usar AQL quizas
-        document_list = retrieve_collection(coll_name)
+        document_list = self.retrieve_collection(coll_name)
         for doc in document_list:
             if doc[doc_name]:
                 return doc
@@ -64,16 +77,6 @@ class dbConnector:
             print('The database already has a collection with that name')
         else:
             self.db.createCollection(name=coll_name)
-
-    def retrieve_collection(self, coll_name):  # doc, bd, coll?
-        # Posiblemente innecesario
-        """Return the collection in a list form."""
-        self.db.reload()
-        coll = self.db.collections[coll_name]
-        document_list = []
-        for document in coll.fetchAll():
-            document_list.append(document._store)
-        return document_list
 
     # def connect_db(self, db_name):
     #     """
