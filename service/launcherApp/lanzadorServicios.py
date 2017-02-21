@@ -94,7 +94,7 @@ access_flag = threading.Event()  # TODO: borrar?
 
 while True:
     try:
-        #db = dbConnector(db_name='automodelingDB', password=args.bd_password,
+        # db = dbConnector(db_name='automodelingDB', password=args.bd_password,
         #                 arangoURL='http://database:8529')
         db = dbConnector(db_name='automodelingDB',
                          arangoURL='http://database:8529')
