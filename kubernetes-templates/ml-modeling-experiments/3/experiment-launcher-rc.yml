@@ -22,7 +22,7 @@ spec:
         - "sh"
         args:
         - -c
-        - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key}; sleep infinity
+        - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key} ${db_password}; sleep infinity
         image: automodeling/automodeling:latest
         imagePullPolicy: Always
         volumeMounts:
@@ -44,3 +44,5 @@ spec:
       volumes:
       - name: results-volume
         emptyDir: {}
+
+        # TODO: deploy a arangoDB container with a persistent volume

@@ -32,6 +32,8 @@ parser.add_argument('access_key', metavar='access_key', type=str,
                     help='access_key for rancher')
 parser.add_argument('secret_key', metavar='secret_key', type=str,
                     help='secret_key for rancher')
+parser.add_argument('bd_password', metavar='bd_password', type=str,
+                    help='password for the db access')
 parser.add_argument('-l', '--local', action='store_true',
                     help='Change the config to launchet it in local')
 parser.add_argument('--info', action='store_const', const=20,
@@ -88,10 +90,12 @@ namespaces_limit = entradas["limit_namespaces"]
 access_flag = threading.Event()  # TODO: borrar?
 
 # DB CONNECTION
-# TODO: Set up for the database. URL, db_name, password and user.
-db = dbConnector(db_name='automodelingDB', password='HW6ToHF3cYSshtYB')
+# TODO: Fix it for local usage.
+db = dbConnector(db_name='automodelingDB', password=args.bd_password,
+                 arangoURL='database:8529')
 
 # TODO: Improve the format for the documents
+
 
 def main():
     print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
@@ -135,9 +139,9 @@ def prepareDirectories():
     os.mkdir("./files")
     os.mkdir("./files/launch")
 
-    #if(os.path.isdir('./results')):
-    #    shutil.rmtree('./results')
-    #os.mkdir("./results")
+    # if(os.path.isdir('./results')):
+    #     shutil.rmtree('./results')
+    # os.mkdir("./results")
 
 
 def getConfiguration(configuration):

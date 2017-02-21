@@ -64,3 +64,18 @@ class dbConnector:
         # FIXME: Posiblemente innecesario
         """Return the collection in a list form."""
         pass
+
+    # def connect_db(self, db_name):
+    #     """
+    #     Connect with the database.
+    #
+    #     If the db doesn't exist it is created.
+    #     Return a db object?.
+    #     """
+    #     if self.conn.hasDatabase(db_name):
+    #         # conectartla
+    #         self.db = pyArango.database.Database(self.conn, db_name)
+    #         pass
+    #     else:
+    #         self.db = self.conn.createDatabase(name="automodelingDB")
+    #         # Crearla

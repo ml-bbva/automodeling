@@ -4,6 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     service: database
+    # OJO SI EL NOMBRE DEL SERVICIO CAMBIA, HAY QUE CAMBIAR EL ACCESO EN EL LANZADOR
   name: arango-db
 spec:
   replicas: 1
@@ -19,7 +20,7 @@ spec:
         imagePullPolicy: Always
         name: arango-db
         env:
-        - name: ARANGO_NO_AUTH
-          value: "1"
+        - name: ARANGO_ROOT_PASSWORD
+          value: ${db_password}
         ports:
         - containerPort: 8529
