@@ -3,17 +3,16 @@ kind: ReplicationController
 metadata:
   creationTimestamp: null
   labels:
-    service: experiment-launcher
+    service: database
   name: arango-db
 spec:
   replicas: 1
   selector:
-    service: experiment-launcher
+    service: database
   template:
     metadata:
       labels:
-        lab: database
-        service: experiment-launcher
+        service: database
     spec:
       containers:
       - image: arangodb
