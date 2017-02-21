@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: botnet-executor
+  name: botnet-executor
+  namespace: catalog1model1
+spec:
+  replicas: 1
+  selector:
+    service: botnet-executor
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: botnet-executor
+    spec:
+      containers:
+      - env:
+        - name: NAMESPACE
+          value: catalog1model1
+        - name: GENERATOR_HOST
+          value: "http://botnet:8080"
+        - name: TICK_DURATION
+          value: "1000"
+        - name: TOPIC
+          value: "catalog1model1-botnet-output"
+        - name: KAFKA_SERVICE
+          value: "kafka.default"
+        image: innotech/botnet-executor-kafka:1.1.0-11
+        imagePullPolicy: ""
+        name: botnet-executor
+        ports:
+        - containerPort: 8080
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes: null
+status:
+  replicas: 0

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: experiment-launcher
+  name: arango-db
+spec:
+  replicas: 1
+  selector:
+    service: experiment-launcher
+  template:
+    metadata:
+      labels:
+        lab: database
+        service: experiment-launcher
+    spec:
+      containers:
+      - image: arangodb
+        imagePullPolicy: Always
+        name: arango-db
+        env:
+        - name: ARANGO_NO_AUTH
+          value: "1"
+        ports:
+        - containerPort: 8529

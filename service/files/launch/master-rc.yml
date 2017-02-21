@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    io.rancher.container.hostname_override: container_name
+    service: master
+  name: master
+  namespace: catalog1model1
+spec:
+  replicas: 1
+  selector:
+    service: master
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: master
+    spec:
+      containers:
+      - env:
+        - name: NAMESPACE
+          value: catalog1model1
+        - name: ARTIFACTORY_URI
+          value: "http://artifactory.ml.innotechapp.com/artifactory/ml/innotech/tensorflow_models/"
+        - name: KAFKA_GROUP
+          value: "catalog1model1-etl-output-consumer"
+        - name: LABEL_SIZE
+          value: "100"
+        - name: HIDDEN_SIZE
+          value: "30,30"
+        - name: METRICS_TOPIC
+          value: "catalog1model1-metrics"
+        - name: RECOVER_SESSION
+          value: "False"
+        - name: SAVE_INTERVAL
+          value: "120"
+        - name: TEST_SIZE
+          value: "5"
+        - name: EPOCHS
+          value: "4"
+        - name: TMP_DIRECTORY
+          value: "/tmp"
+        - name: KAFKA_SERVICE
+          value: "kafka.default"
+        - name: MODEL_NAME
+          value: "catalog1model1-model"
+        - name: BATCH_SIZE
+          value: "200"
+        - name: INPUT_SIZE
+          value: "100"
+        - name: JOB_NAME
+          value: "worker"
+        - name: METRIC_INTERVAL
+          value: "1"
+        - name: TOPIC
+          value: "catalog1model1-etl-output"
+        image: innotech/generic-neural-network-tensorflow:latest
+        imagePullPolicy: ""
+        name: master
+        ports:
+        - containerPort: 2222
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes: null
+status:
+  replicas: 0

@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bokeh-plotter
+  namespace: ${NAMESPACE}
+spec:
+  rules:
+  - host: bokeh-plotter.${NAMESPACE}.${TRAEFIK_DOMAIN}
+    http:
+      paths:
+      - backend:
+          serviceName: bokeh-plotter
+          servicePort: 5006
