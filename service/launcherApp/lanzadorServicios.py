@@ -91,8 +91,16 @@ access_flag = threading.Event()  # TODO: borrar?
 
 # DB CONNECTION
 # TODO: Fix it for local usage.
-db = dbConnector(db_name='automodelingDB', password=args.bd_password,
-                 arangoURL='database:8529')
+
+while True:
+    try:
+        db = dbConnector(db_name='automodelingDB', password=args.bd_password,
+                         arangoURL='database:8529')
+    except Exception:
+        logger.info('NO DATABASE CONNECTION')
+    else:
+        logger.info('Database succesfuly connected')
+        break
 
 # TODO: Improve the format for the documents
 
