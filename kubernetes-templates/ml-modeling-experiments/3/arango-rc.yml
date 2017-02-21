@@ -20,8 +20,8 @@ spec:
         imagePullPolicy: Always
         name: arango-db
         env:
-        - name: ARANGO_ROOT_PASSWORD
-          value: ${db_password}
+        - name: ARANGO_NO_AUTH
+          value: "1"
         ports:
         - containerPort: 8529
         volumeMounts:

@@ -94,10 +94,13 @@ access_flag = threading.Event()  # TODO: borrar?
 
 while True:
     try:
-        db = dbConnector(db_name='automodelingDB', password=args.bd_password,
-                         arangoURL='database:8529')
+        #db = dbConnector(db_name='automodelingDB', password=args.bd_password,
+        #                 arangoURL='http://database:8529')
+        db = dbConnector(db_name='automodelingDB', 
+                         arangoURL='http://database:8529')
     except Exception:
         logger.info('NO DATABASE CONNECTION')
+        time.sleep(5)
     else:
         logger.info('Database succesfuly connected')
         break
