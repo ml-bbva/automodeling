@@ -8,13 +8,27 @@ import pyArango
 
 class dbConnector:
     """Connects with ONLY ONE db and perform operation on it."""
-    def connect_db(self, db_name):
-        """
-        Connect with the database.
+    #
+    # def connect_db(self, db_name):
+    #     """
+    #     Connect with the database.
+    #
+    #     If the db doesn't exist it is created.
+    #     Return a db object?.
+    #     """
+    #     if self.conn.hasDatabase(db_name):
+    #         # conectartla
+    #         self.db = pyArango.database.Database(self.conn, db_name)
+    #         pass
+    #     else:
+    #         self.db = self.conn.createDatabase(name=db_name)
+    #         # Crearla
 
-        If the db doesn't exist it is created.
-        Return a db object?.
-        """
+    def __init__(self, db_name, user='root',
+                 arangoURL='http://127.0.0.1:8529'):
+        """ Init the database conection and set atributes db atribute."""
+        self.conn = Connection(username=user,
+                               arangoURL=arangoURL)
         if self.conn.hasDatabase(db_name):
             # conectartla
             self.db = pyArango.database.Database(self.conn, db_name)
@@ -22,20 +36,14 @@ class dbConnector:
         else:
             self.db = self.conn.createDatabase(name=db_name)
             # Crearla
-    """        
-    def __init__(self, password, db_name, user='root',
-                 arangoURL='http://127.0.0.1:8529'):
-        #Init the database conection and set atributes db atribute.
-        self.conn = Connection(username=user, password=password,
-                               arangoURL=arangoURL)
-        self.db = connect_db(db_name)
-    """
-    def __init__(self, db_name, user='root',
-                 arangoURL='http://127.0.0.1:8529'):
-        #Init the database conection and set atributes db atribute.
-        self.conn = Connection(username=user, 
-                               arangoURL=arangoURL)
-        self.db = connect_db(db_name)
+
+    # def __init__(self, password, db_name, user='root',
+    #              arangoURL='http://127.0.0.1:8529'):
+    #     #Init the database conection and set atributes db atribute.
+    #     self.conn = Connection(username=user, password=password,
+    #                            arangoURL=arangoURL)
+    #     self.db = connect_db(db_name)
+
 
     def save_document(self, doc, coll_name):  # doc, bd, coll?
         """
@@ -51,8 +59,6 @@ class dbConnector:
             document.save()
         else:
             print('There is no collection with that name')
-
-        userColl = self.db.collections['Users']
 
     def retrieve_document(self, doc_name):  # doc, bd, coll?
         """Return the document in a python dic form."""

@@ -96,14 +96,17 @@ while True:
     try:
         #db = dbConnector(db_name='automodelingDB', password=args.bd_password,
         #                 arangoURL='http://database:8529')
-        db = dbConnector(db_name='automodelingDB', 
+        db = dbConnector(db_name='automodelingDB',
                          arangoURL='http://database:8529')
     except Exception:
-        logger.info('NO DATABASE CONNECTION')
+        logger.info('NO DATABASE CONdNECTION')
         time.sleep(5)
     else:
         logger.info('Database succesfuly connected')
         break
+
+db.create_collection('parameter_records')
+db.create_collection('global_results')
 
 # TODO: Improve the format for the documents
 
