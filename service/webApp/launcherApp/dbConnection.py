@@ -14,10 +14,10 @@ import pyArango
 class dbConnector:
     """Connects with ONLY ONE db and perform operation on it."""
 
-    def __init__(self, db_name, auth=False, password='', user='root',
+    def __init__(self, db_name, password='.', user='root',
                  arangoURL='http://127.0.0.1:8529'):
         """Init the database conection and set atributes db atribute."""
-        if auth:
+        if password is not '.':
             self.conn = Connection(username=user, password=password,
                                    arangoURL=arangoURL)
         else:
