@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: etl-create-agreement
+  namespace: catalog1model1
+spec:
+  # ExternalName: ""
+  clusterIP: None
+  ports:
+  - name: ""
+    nodePort: 0
+    port: 8080
+    protocol: ""
+    targetPort: 0
+  selector:
+    service: etl-create-agreement
+status:
+  loadBalancer: {}

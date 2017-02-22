@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: bokeh-plotter
+  namespace: ${NAMESPACE}
+spec:
+  # ExternalName: ""
+  clusterIP: None
+  ports:
+  - name: ""
+    nodePort: 0
+    port: 5006
+    protocol: ""
+    targetPort: 0
+  selector:
+    service: bokeh-plotter
+status:
+  loadBalancer: {}

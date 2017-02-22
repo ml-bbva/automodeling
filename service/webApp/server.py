@@ -3,8 +3,64 @@ from flask import Flask, render_template
 import json
 import json2html
 import os
+import argparse
+import logging
 
 app = Flask(__name__)
+
+parser = argparse.ArgumentParser(
+            description='Launch several neural networks' +
+            ' in order to achieve hypermaremetring tunning.')
+parser.add_argument('url_entradas', metavar='url_entradas', type=str,
+                    help='url in which the yaml file is located')
+parser.add_argument('access_key', metavar='access_key', type=str,
+                    help='access_key for rancher')
+parser.add_argument('secret_key', metavar='secret_key', type=str,
+                    help='secret_key for rancher')
+parser.add_argument('bd_password', metavar='bd_password', type=str,
+                    help='password for the db access')
+parser.add_argument('-l', '--local', action='store_true',
+                    help='Change the config to launchet it in local')
+parser.add_argument('--info', action='store_const', const=20,
+                    help='set log level INFO')
+parser.add_argument('--debug', action='store_const', const=10,
+                    help='set log level DEBUG')
+
+# GET THE ARGUMENTS
+args = parser.parse_args()
+
+# LOGGER CONFIG
+logger = logging.getLogger('AUTOMODELING')
+# create formatter
+formatter = logging.Formatter('%(name)s:%(levelname)s\t%(message)s')
+# create console handler
+ch = logging.StreamHandler()
+
+# Set log level
+if args.info:
+    logger.setLevel(args.info)
+    ch.setLevel(args.info)
+elif args.debug:
+    logger.setLevel(args.debug)
+    ch.setLevel(args.debug)
+else:
+    logger.setLevel(logging.WARN)
+    ch.setLevel(logging.WARN)
+
+# add formatter to ch
+ch.setFormatter(formatter)
+# add ch to logger
+logger.addHandler(ch)
+
+
+url_entradas = args.url_entradas
+logger.debug('url de las entradas:' + url_entradas)
+access_key = args.access_key
+logger.debug('access key:' + access_key)
+secret_key = args.secret_key
+logger.debug('secret key:' + secret_key)
+
+launcher = lanzador(args.url_entradas,args.access_key,args.secret_key)
 
 
 # Pagina inicial 
@@ -14,6 +70,7 @@ def get_results():
 	#with open('../launcherApp/results/global_results.json', 'r') as f:
 	#	results = json.load(f)
 	#return json2html.json2html.convert(json=results)
+	launcher.main()
 	return render_template('index.html')
 
 
