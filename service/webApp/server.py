@@ -5,6 +5,7 @@ import json2html
 import os
 import argparse
 import logging
+from launcherApp.lanzadorServicios import lanzador
 
 app = Flask(__name__)
 
@@ -54,13 +55,13 @@ logger.addHandler(ch)
 
 
 url_entradas = args.url_entradas
-logger.debug('url de las entradas:' + url_entradas)
+logger.info('url de las entradas:' + url_entradas)
 access_key = args.access_key
-logger.debug('access key:' + access_key)
+logger.info('access key:' + access_key)
 secret_key = args.secret_key
-logger.debug('secret key:' + secret_key)
+logger.info('secret key:' + secret_key)
 
-launcher = lanzador(args.url_entradas,args.access_key,args.secret_key)
+launcher = lanzador(args.url_entradas,args.access_key,args.secret_key,logger)
 
 
 # Pagina inicial 

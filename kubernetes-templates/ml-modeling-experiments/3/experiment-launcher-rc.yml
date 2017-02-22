@@ -17,14 +17,6 @@ spec:
         service: experiment-launcher
     spec:
       containers:
-      - name: experiment-launcher
-        command:
-        - "sh"
-        args:
-        - -c
-        - sleep infinity
-        image: automodeling/automodeling:latest
-        imagePullPolicy: Always
       - name: webapp
         command:
         - "sh"

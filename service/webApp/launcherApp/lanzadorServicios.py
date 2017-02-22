@@ -27,80 +27,82 @@ from dbConnection import dbConnector
 
 class lanzador:
 
-    def __init__(self,url_entradas,access_key,secret_key):
+    def __init__(self,url_entradas,access_key,secret_key,logger):
         self.url_entradas = url_entradas
         self.access_key = access_key
         self.secret_key = secret_key
+        self.logger = logger
         self.namespaces_running = 0
         self.namespaces_limit = 0
         self.time_out = 0
         self.access_flag = threading.Event()
+        self.db = None
 
 
-    def main():
+    def main(self):
         print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
         entradas = requests.get(url=self.url_entradas, verify=False)
         entradas = yaml.load(entradas.text)
-        logger.info('Obtenido el fichero de configuracion para los parametros')
-        logger.debug(entradas)
+        self.logger.info('Obtenido el fichero de configuracion para los parametros')
+        self.logger.debug(entradas)
         self.time_out = entradas["time_out"]
         self.namespaces_limit = entradas["limit_namespaces"]
 
-        connect_db()
-        prepareDirectories()
+        self.connect_db()
+        self.prepareDirectories()
         with open('./results/global_results.json', 'w') as f:
-            logger.info('Creado fichero de resultados vacio')
+            self.logger.info('Creado fichero de resultados vacio')
             # dicempty = {}
             # json.dump(dicempty, f)
             arrayempty = []
             json.dump(arrayempty, f)
         catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
-        logger.info(catalogs)
+        self.logger.info(catalogs)
         param_record = {}
 
         for catalog in catalogs:
-            logger.info(catalog)
-            files, url, url_catalog = getConfiguration(
+            self.logger.info(catalog)
+            files, url, url_catalog = self.getConfiguration(
                     configuration=entradas["catalog_services"][catalog])
-            configurateKubectl(rancher_url=url)
+            self.configurateKubectl(rancher_url=url)
             os.system('./exec/kubectl version')
-            parametros_nombre, parametros = getDefinedParams(
+            parametros_nombre, parametros = self.getDefinedParams(
                     entradas["catalog_services"][catalog]['PARAMS'])
-            parametros_nombre, parametros = addDefaultParams(
+            parametros_nombre, parametros = self.addDefaultParams(
                     parametros_nombre, parametros)
-            param_record[catalog] = launchExperiments(
+            param_record[catalog] = self.launchExperiments(
                         files=files,
                         catalog_name=catalog,
                         parametros=parametros,
                         parametros_nombre=parametros_nombre)
-            db.save_document(param_record, coll_name='parameter_records')
+            self.db.save_document(param_record, coll_name='parameter_records')
 
         # TODO: Delete json things
         with open('./results/parameter_record.json', 'w') as outfile:
             json.dump(param_record, outfile)
 
 
-    def connect_db():
+    def connect_db(self):
         while True:
             try:
                 # db = dbConnector(db_name='automodelingDB', password=args.bd_password,
                 #                 arangoURL='http://database:8529')
-                db = dbConnector(db_name='automodelingDB',
+                self.db = dbConnector(db_name='automodelingDB',
                                  arangoURL='http://database:8529')
             except Exception:
-                logger.info('NO DATABASE CONdNECTION')
+                self.logger.info('NO DATABASE CONdNECTION')
                 time.sleep(5)
             else:
-                logger.info('Database succesfuly connected')
+                self.logger.info('Database succesfuly connected')
                 break
 
-        db.create_collection('parameter_records')
-        db.create_collection('global_results')
+        self.db.create_collection('parameter_records')
+        self.self.db.create_collection('global_results')
 
         # TODO: Improve the format for the documents
 
 
-    def prepareDirectories():
+    def prepareDirectories(self):
 
         if(os.path.isdir('./files')):
             shutil.rmtree('./files')
@@ -112,7 +114,7 @@ class lanzador:
         # os.mkdir("./results")
 
 
-    def getConfiguration(configuration):
+    def getConfiguration(self,configuration):
         # Extrae de un yaml toda la configuracion para el lanzador
         # de namespaces y la organiza
 
@@ -122,8 +124,8 @@ class lanzador:
         auth = requests.auth.HTTPBasicAuth(access_key, secret_key)
         r = requests.get(url=url_catalog, auth=auth)
         content_all = r.json()
-        logger.info('Obtenido el objeto JSON de la API')
-        logger.debug(content_all)
+        self.logger.info('Obtenido el objeto JSON de la API')
+        self.logger.debug(content_all)
 
         # Obtención de los ficheros de los servicios que hay que arrancar
         files = content_all['files']
@@ -138,11 +140,11 @@ class lanzador:
         return (files, url_rancher, url_catalog)
 
 
-    def configurateKubectl(rancher_url):
+    def configurateKubectl(self,rancher_url):
         # TODO: Dejar configurable los parametros que llevan el nombre ml-kube
 
         # Configuramos kubectl
-        logger.info('Empezamos a configurar kubectl')
+        self.logger.info('Empezamos a configurar kubectl')
 
         # calculo de la ruta relativa donde se encuentra la carpeta .kube
         filepath = "/root/.kube/config"
@@ -153,7 +155,7 @@ class lanzador:
         # Obtenemos la plantilla para el config
         with open(filepath, 'r') as f:
             text = f.read()
-            logger.debug('Plantilla del config\n' + text)
+            self.logger.debug('Plantilla del config\n' + text)
             kubeConfig = yaml.load(text)
 
         # https://rancher.default.svc.cluster.local:80/r/projects/1a8238/kubernetes
@@ -161,23 +163,23 @@ class lanzador:
         kubeConfig['users'][0]['user']['username'] = access_key
         kubeConfig['users'][0]['user']['password'] = secret_key
 
-        logger.debug('Configuration set')
+        self.logger.debug('Configuration set')
 
         with open(filepath, 'w') as f:
             yaml.dump(kubeConfig, f)
 
 
-    def getDefinedParams(parametros_yml):
+    def getDefinedParams(self,parametros_yml):
         # Obtiene los parametros para un stack del catalogo
         parametros_nombre = []
         parametros = []
-        logger.debug(parametros_yml)
+        self.logger.debug(parametros_yml)
         # Las distintas formas que se consideran son: parametroNombre->n
         # 1. [valorInicial:valorFinal:Salto] -> Lineal
         # 2. TODO: [valorInicial:valorFinal:Función] -> Otro tipo de funcion
         # 3. TODO: HIDDEN_SIZE deberia aceptar parametros que no fueran absolute
         for parametro in parametros_yml:
-            logger.info(parametro)
+            self.logger.info(parametro)
             parametros_nombre.append(parametro)
             # Obtiene el parametro HIDDEN_SIZE, que es especial
             if(parametro == 'HIDDEN_SIZE'):
@@ -205,17 +207,17 @@ class lanzador:
             elif(opcion == "absolute"):
                 parametros.append(parametros_yml[parametro]["param"])
             else:
-                logger.critical('ERROR: FORMATO DE PARAMETROS INCORRECTO')
+                self.logger.critical('ERROR: FORMATO DE PARAMETROS INCORRECTO')
                 raise SyntaxError('Parametros en el yml incorectos')
 
         parametros_nombre = parametros_nombre[::-1]
         parametros = parametros[::-1]
-        logger.info('Obtenida la lista de posibles parametros')
+        self.logger.info('Obtenida la lista de posibles parametros')
 
         return (parametros_nombre, parametros)
 
 
-    def addDefaultParams(parametros_nombre, parametros):
+    def addDefaultParams(self,parametros_nombre, parametros):
         with open('./files/rancher-compose.yml', 'r') as f:
             fileContent = f.read()
             rancherComposeContent = yaml.load(fileContent)
@@ -236,7 +238,7 @@ class lanzador:
         return (parametros_nombre, parametros)
 
 
-    def launchExperiments(files, catalog_name, parametros, parametros_nombre):
+    def launchExperiments(self,files, catalog_name, parametros, parametros_nombre):
         # Iteracion para lanzar las combinaciones entre los parametros de entrada
         cont = 1
         # threads = []
@@ -258,7 +260,7 @@ class lanzador:
                         text = f.read()
 
                     for index in range(len(parametros_nombre)):
-                        logger.info(
+                        self.logger.info(
                             parametros_nombre[index] + '=' +
                             str(param[index]) + '\n')
                         text = text.replace(
@@ -278,17 +280,17 @@ class lanzador:
             while(self.namespaces_running >= self.namespaces_limit):
                 continue
 
-            logger.info('Preparado para lanzar namespace ' + namespace)
+            self.logger.info('Preparado para lanzar namespace ' + namespace)
             # Llamadas a kubectl
             # Se crea un namespace por cada combinacion
-            create_namespace(namespace)
+            self.create_namespace(namespace)
             # Por cada fichero en ./files, se lanza un start_service
             # dentro de un namespace
             for file in files:
                 if(file != 'rancher-compose.yml'):
-                    start_service(namespace, './files/launch/' + file)
+                    self.start_service(namespace, './files/launch/' + file)
 
-            pid = startKafka(namespace)
+            pid = self.startKafka(namespace)
 
             # threads.append(threading.Timer(
             #        time_out, rm_namespace, args=[namespace, pid]))
@@ -303,18 +305,18 @@ class lanzador:
         return param_record
 
 
-    def create_namespace(namespace):
+    def create_namespace(self,namespace):
         # Crea un namespace con el nombre dado
         os.system('./exec/kubectl create namespace ' + namespace)
         self.namespaces_running += 1
 
 
-    def rm_namespace(namespace, pid):
+    def rm_namespace(self,namespace, pid):
         # Borra el namespace con el nombre dado y su contenido
         # Mata el proceso kafka
-        killProcess(pid)
+        self.killProcess(pid)
         # Llama a kafka para obtener los resultados
-        getResults(namespace, 1)
+        self.getResults(namespace, 1)
         # Delete namespace content
         os.system(
             './exec/kubectl delete ' +
@@ -327,14 +329,14 @@ class lanzador:
         self.namespaces_running -= 1
 
 
-    def start_service(namespace, serviceFile):
-        logger.info('Lanzando servicio ' +
+    def start_service(self,namespace, serviceFile):
+        self.logger.info('Lanzando servicio ' +
                     serviceFile + ' en el namespace ' + namespace)
         os.system('./exec/kubectl --namespace=' + namespace +
                   ' create -f ' + serviceFile)
 
 
-    def startKafka(namespace):
+    def startKafka(self,namespace):
         pid = 0
         with open('./results/'+namespace, 'w') as file_results:
             kafkaConsumer = Popen(
@@ -347,29 +349,29 @@ class lanzador:
                 shell=True,
                 preexec_fn=os.setsid)
             pid = kafkaConsumer.pid
-            logger.info(pid)
+            self.logger.info(pid)
         return pid
 
 
-    def checkResults(namespace, pid):
+    def checkResults(self,namespace, pid):
         time_finish = time.time() + self.time_out
         last_time = time.time()
         start_time = time.time()
         while (time.time() <= time_finish):
-            logger.info('Está en le bucle de acceso a resultados')
-            lastResults = getResults(namespace, 10)
+            self.logger.info('Está en le bucle de acceso a resultados')
+            lastResults = self.getResults(namespace, 10)
             if(len(lastResults) == 0):
                 time.sleep(10)
                 continue
             if(lastResults[len(lastResults)-1]['accuracy'] == 1.0):
-                logger.info('Resultados:')
-                logger.info(lastResults)
+                self.logger.info('Resultados:')
+                self.logger.info(lastResults)
                 break
             time.sleep(10)
             last_time = time.time()
 
         rm_namespace(namespace, pid)
-        logger.info('Debería pasar por aquí para guardar los resultados')
+        self.logger.info('Debería pasar por aquí para guardar los resultados')
 
         # TODO: Include time in the lastResutls
 
@@ -382,16 +384,16 @@ class lanzador:
         with open('./results/global_results.json', 'r') as json_file:
             json_obj = json.load(json_file)
         with open('./results/global_results.json', 'w') as json_file:
-            logger.info('Guardando resultados:')
-            logger.info(data)
+            self.logger.info('Guardando resultados:')
+            self.logger.info(data)
             json_obj.append(data)
-            logger.info(json_obj)
+            self.logger.info(json_obj)
             json.dump(json_obj, json_file)
-        db.save_document(data, 'global_results')
+        self.db.save_document(data, 'global_results')
         self.access_flag.clear()
 
 
-    def getResults(namespace, numberResults):
+    def getResults(self,namespace, numberResults):
         # Obtiene el resultado del numero de lineas especificadas como parametro
         process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
         process2 = Popen(
@@ -400,19 +402,19 @@ class lanzador:
                 stdout=PIPE)
         (out, err) = process2.communicate()
         out = out.decode('UTF-8')
-        logger.info(out)
+        self.logger.info(out)
 
         results = str(out).split('\n')[:-1]
-        logger.info(results)
+        self.logger.info(results)
 
         if(len(results) <= 1):
             return []
 
         prog = re.compile('[(\d|\.)+\s]+')
         if(not (prog.match(results[len(results)-1]) and prog.match(results[0]))):
-            logger.info("No es el formato")
-            logger.info(results[0])
-            logger.info(results[len(results)-1])
+            self.logger.info("No es el formato")
+            self.logger.info(results[0])
+            self.logger.info(results[len(results)-1])
             return []
 
         results = list(map(methodcaller("split"), results))
@@ -420,17 +422,17 @@ class lanzador:
         if(len(results) <= 1):
             return []
 
-        logger.info(results)
+        self.logger.info(results)
         resultsList = [{'cost': float(result[3]),
                         'accuracy': float(result[4])} for result in results]
-        logger.info(resultsList)
+        self.logger.info(resultsList)
         return resultsList
 
-        # logger.info("Ejecutando cat directamente:")
+        # self.logger.info("Ejecutando cat directamente:")
         # os.system('cat ./results/'+namespace+' | tail -'+str(numberResults))
 
 
-    def killProcess(pid):
+    def killProcess(self,pid):
         # Mata el proceso kafka creado por popen
         os.killpg(os.getpgid(pid), signal.SIGTERM)
 
