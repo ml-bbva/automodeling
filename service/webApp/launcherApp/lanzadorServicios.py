@@ -21,7 +21,6 @@ from dbConnection import dbConnector
 # TODO: Check Error Handling
 # TODO: create docstrings
 
-
 # DB CONNECTION
 # TODO: Fix it for local usage.
 
