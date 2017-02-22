@@ -6,7 +6,7 @@ import os
 import argparse
 import logging
 from launcherApp.lanzadorServicios import lanzador
-from dbConnection import dbConnector
+from launcherApp.dbConnection import dbConnector
 
 app = Flask(__name__)
 
