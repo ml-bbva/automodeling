@@ -2,7 +2,7 @@
 
 # Automodeling
 
-**DEBUG MODE VERSION**: Debug logging is going to be printed
+**QUIET MODE VERSION**: Only warnings and errors will be printed
 
 ### Info:
 

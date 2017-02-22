@@ -17,12 +17,13 @@ spec:
         service: experiment-launcher
     spec:
       containers:
-      -
+      - name: webapp
         command:
         - "sh"
         args:
-        - -c
-        - python lanzadorServicios.py ${url_entradas} ${access_key} ${secret_key} --debug; sleep infinity
-        image: automodeling/automodeling:1.2.0
+        - "-c"
+        - "python server.py ${url_entradas} ${access_key} ${secret_key} ${db_password} --debug"
+        image: automodeling/webapp:latest
         imagePullPolicy: Always
-        name: experiment-launcher
+        ports:
+          - containerPort: 5000

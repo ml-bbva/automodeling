@@ -1,7 +1,7 @@
 .catalog:
     name: "Experiments Launcher"
-    version: "v0.1-verbose"
-    description: "Atomatic launcher for services in the catalog with diferent configurations. Debug Mode."
+    version: "v1.0-Web"
+    description: "Automatic launcher for services in the catalog with diferent configurations. Web interface for visualization"
     questions:
         - variable: "access_key"
           label: "Access key for Rancher"
@@ -15,3 +15,9 @@
           label: "Url where the yaml file with the configuration parametres is located."
           required: true
           type: "string"
+        - variable: "db_password"
+          label: "Password for the root user in the Database."
+          required: true
+          type: "string"
+          description: "Leave it blank for no auth. Don't use dots"
+          default: "."
