@@ -15,7 +15,7 @@ import shutil
 from operator import methodcaller
 import time
 import re
-from dbConnection import dbConnector
+from launcherApp.dbConnection import dbConnector
 
 # TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
