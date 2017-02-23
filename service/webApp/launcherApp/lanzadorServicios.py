@@ -70,7 +70,7 @@ class lanzador:
             files, url, url_catalog = self.getConfiguration(
                     configuration=entradas["catalog_services"][catalog])
             self.configurateKubectl(rancher_url=url)
-            os.system('./exec/kubectl version')
+            os.system(self.MODULE_DIR + '/exec/kubectl version')
             parametros_nombre, parametros = self.getDefinedParams(
                     entradas["catalog_services"][catalog]['PARAMS'])
             parametros_nombre, parametros = self.addDefaultParams(
@@ -307,7 +307,7 @@ class lanzador:
 
             threadsCheckResults.append(threading.Thread(
                     target=self.checkResults,
-                    args=[namespace, self.time_out, pid]))
+                    args=[namespace, pid]))
             threadsCheckResults[cont-1].start()
 
             cont = cont + 1
@@ -316,7 +316,7 @@ class lanzador:
 
     def create_namespace(self, namespace):
         """Crea un namespace con el nombre dado."""
-        os.system('./exec/kubectl create namespace ' + namespace)
+        os.system(self.MODULE_DIR + '/exec/kubectl create namespace ' + namespace)
         self.namespaces_running += 1
 
     def rm_namespace(self, namespace, pid):
@@ -326,13 +326,14 @@ class lanzador:
         self.getResults(namespace, 1)
         # Delete namespace content
         os.system(
-            './exec/kubectl delete ' +
+            self.MODULE_DIR + '/exec/kubectl delete ' +
             '--all service,rc,ingress,pod --namespace=' +
             namespace +
             ' --now'
         )
         # Delete the namespace itself
-        os.system('./exec/kubectl delete namespace ' + namespace)
+        os.system(
+            self.MODULE_DIR + '/exec/kubectl delete namespace ' + namespace)
         self.namespaces_running -= 1
 
     def start_service(self, namespace, serviceFile):
@@ -340,7 +341,7 @@ class lanzador:
         self.logger.info(
                 'Lanzando servicio ' + serviceFile +
                 ' en el namespace ' + namespace)
-        os.system('./exec/kubectl --namespace=' + namespace +
+        os.system(self.MODULE_DIR + '/exec/kubectl --namespace=' + namespace +
                   ' create -f ' + serviceFile)
 
     def startKafka(self, namespace):
@@ -348,7 +349,7 @@ class lanzador:
         pid = 0
         with open('./results/'+namespace, 'w') as file_results:
             kafkaConsumer = Popen(
-                ['./exec/kafka-console-consumer'],
+                [self.MODULE_DIR + '/exec/kafka-console-consumer'],
                 env={"KAFKA_SERVICE": "kafka.default.svc.cluster.local",
                      "TOPIC": namespace+"-metrics",
                      "OFFSET": "oldest",
