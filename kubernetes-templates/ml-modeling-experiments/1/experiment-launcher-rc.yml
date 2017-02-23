@@ -23,7 +23,7 @@ spec:
         args:
         - "-c"
         - "python server.py ${url_entradas} ${access_key} ${secret_key} ${db_password} --info"
-        image: automodeling/webapp:latest
+        image: automodeling/webapp:1.4.0-web
         imagePullPolicy: Always
         ports:
           - containerPort: 5000

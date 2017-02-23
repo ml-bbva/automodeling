@@ -187,6 +187,7 @@ class lanzador:
         # 3. TODO: HIDDEN_SIZE debe aceptar parametros que no fueran absolute
         for parametro in parametros_yml:
             self.logger.info(parametro)
+            self.logger.info(type(parametro))
             parametros_nombre.append(parametro)
             # Obtiene el parametro HIDDEN_SIZE, que es especial
             if(parametro == 'HIDDEN_SIZE'):
