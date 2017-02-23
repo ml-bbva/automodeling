@@ -22,7 +22,7 @@ spec:
         - "sh"
         args:
         - "-c"
-        - "python server.py ${url_entradas} ${access_key} ${secret_key} ${db_password} --debug"
+        - "python server.py ${url_entradas} ${access_key} ${secret_key} ${db_password} --info"
         image: automodeling/webapp:latest
         imagePullPolicy: Always
         ports:

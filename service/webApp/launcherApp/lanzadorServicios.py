@@ -40,6 +40,7 @@ class lanzador:
         self.access_flag = threading.Event()
         self.db_password = db_password
         self.db = None
+        self.MODULE_DIR = os.path.dirname(__file__)
 
     def main(self):
         """Main execution of the class."""
@@ -154,13 +155,13 @@ class lanzador:
         self.logger.debug('Empezamos a configurar kubectl')
 
         # calculo de la ruta relativa donde se encuentra la carpeta .kube
-        filepath = "/root/.kube/config"
+        filepath = '/root/.kube/'
         # if args.local:  #TODO: New local configuration needed
         #     filepath = '/home/ignacio/.kube/config'
-        os.system("cp config " + filepath)
+        os.system('cp ' + self.MODULE_DIR + '/config ' + filepath)
 
         # Obtenemos la plantilla para el config
-        with open(filepath, 'r') as f:
+        with open(filepath + 'config', 'r') as f:
             text = f.read()
             self.logger.debug('Plantilla del config\n' + text)
             kubeConfig = yaml.load(text)
@@ -172,7 +173,7 @@ class lanzador:
 
         self.logger.info('Configuration set')
 
-        with open(filepath, 'w') as f:
+        with open(filepath + 'config', 'w') as f:
             yaml.dump(kubeConfig, f)
 
     def getDefinedParams(self, parametros_yml):
