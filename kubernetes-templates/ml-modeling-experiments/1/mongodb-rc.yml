@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: mongodb
+    # OJO SI EL NOMBRE DEL SERVICIO CAMBIA, HAY QUE CAMBIAR EL ACCESO EN EL LANZADOR
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    service: mongodb
+  template:
+    metadata:
+      labels:
+        service: mongodb
+    spec:
+      containers:
+      - image: mongodb
+        imagePullPolicy: Always
+        name: mongodb
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+          - mountPath: /data/db
+            name: automodeling-database
+      volumes:
+      - name: automodeling-database
+        hostPath:
+          path: /automodeling

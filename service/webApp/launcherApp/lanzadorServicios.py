@@ -77,7 +77,7 @@ class lanzador:
                         catalog_name=catalog,
                         parametros=parametros,
                         parametros_nombre=parametros_nombre)
-            self.db.save_document(param_record, coll_name='parameter_records')
+            # self.db.save_document(param_record, coll_name='parameter_records')
 
         # TODO: Delete json things
         with open('./results/parameter_record.json', 'w') as outfile:
@@ -88,10 +88,11 @@ class lanzador:
         cont = 0
         while cont < 10:
             try:
+                # TODO: Change for mongodb
                 self.db = dbConnector(
                         db_name='automodelingDB',
                         password=self.db_password,
-                        arangoURL='http://database:8529')
+                        arangoURL='http://monogdb:27017')
                 # self.db = dbConnector(
                 #         db_name='automodelingDB',
                 #         arangoURL='http://database:8529')
@@ -105,10 +106,10 @@ class lanzador:
         if cont > 10:
             self.logger.critical('FAILED TO CONNECT THE DATABASE')
 
-        self.db.create_collection('parameter_records')
-        self.db.create_collection('global_results')
+        # self.db.create_collection('parameter_records')
+        # self.db.create_collection('global_results')
 
-        # TODO: Improve the format for the documents
+    # TODO: Improve the format for the documents
 
     def prepareDirectories(self):
         """Clean and make the directories needed."""
@@ -242,27 +243,35 @@ class lanzador:
 
         return (parametros_nombre, parametros)
 
-    def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
-        """Lanza las combinaciones entre los parametros de entrada."""
+    def launchExperiments(
+            self, files, catalog_name,
+            parametros, parametros_nombre):
+        """
+        Lanza las combinaciones entre los parametros de entrada.
+
+        Guarda cada combinacion de parametros como un documento en la misma
+        coleccion. No debe devolver nada. Gestiona la cola?
+        (Inicializa la cola?).
+        """
         cont = 1
         # threads = []
         threadsCheckResults = []
-        param_record = {}
+        # param_record = {}
 
         # Se guardan los parametros en el fichero answers.txt
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros
             # Check -> Los nombres de los paramentros deben ser exactamente
             #          los mismos que en los ficheros.
-
             # El namespace no admite mayusculas
             namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
-            param_record[namespace] = {}
+            # param_record[namespace] = {}
+            namespace_document = {}
+            namespace_document['name'] = namespace
             for file_name in files:
                 if(file_name != 'rancher-compose.yml'):
                     with open('./files/' + file_name, 'r') as f:
                         text = f.read()
-
                     for index in range(len(parametros_nombre)):
                         self.logger.info(
                             parametros_nombre[index] + '=' +
@@ -270,7 +279,7 @@ class lanzador:
                         text = text.replace(
                             '${' + parametros_nombre[index] + '}',
                             str(param[index]))
-                        param_record[namespace][
+                        namespace_document['parameters'][
                             parametros_nombre[index]] = param[index]
                     # Set by default the namespace
                     text = text.replace(
@@ -281,7 +290,7 @@ class lanzador:
                         namespace)
                     with open('./files/launch/' + file_name, 'w') as f:
                         f.write(text)
-
+            self.db.save_document(namespace_document, coll_name='experiments')
             while(self.namespaces_running >= self.namespaces_limit):
                 continue
 
@@ -297,10 +306,6 @@ class lanzador:
 
             pid = self.startKafka(namespace)
 
-            # threads.append(threading.Timer(
-            #        time_out, rm_namespace, args=[namespace, pid]))
-            # threads[cont-1].start()
-
             threadsCheckResults.append(threading.Thread(
                     target=self.checkResults,
                     args=[namespace, pid]))
@@ -308,7 +313,7 @@ class lanzador:
 
             cont = cont + 1
 
-        return param_record
+        return namespace_document  # FIXME: Return innecesario ahora
 
     def create_namespace(self, namespace):
         """Crea un namespace con el nombre dado."""
@@ -377,23 +382,24 @@ class lanzador:
 
         self.rm_namespace(namespace, pid)
         self.logger.debug('Debería pasar por aquí para guardar los resultados')
-        data = {namespace: {
+        results = {namespace: {
                 'time': last_time - start_time,
-                'Results': lastResults}}
+                'last_results': lastResults}}
 
         # TODO: Delete json things
         if self.access_flag.isSet():
             self.access_flag.wait()
         self.access_flag.set()
+        # TODO: Delete json documments things
         with open('./results/global_results.json', 'r') as json_file:
             json_obj = json.load(json_file)
         with open('./results/global_results.json', 'w') as json_file:
             self.logger.info('Guardando resultados:')
-            self.logger.info(data)
-            json_obj.append(data)
+            self.logger.info(results)
+            json_obj.append(results)
             self.logger.info(json_obj)
             json.dump(json_obj, json_file)
-        self.db.save_document(data, 'global_results')
+        self.db.update_document(results, 'global_results')  # TODO: define update_document func
         self.access_flag.clear()
 
     def getResults(self, namespace, numberResults):
