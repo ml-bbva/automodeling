@@ -92,7 +92,7 @@ class lanzador:
                 self.db = dbConnector(
                         db_name='automodelingDB',
                         password=self.db_password,
-                        arangoURL='http://monogdb:27017')
+                        url='mongodb://mongodb:27017/')
                 # self.db = dbConnector(
                 #         db_name='automodelingDB',
                 #         arangoURL='http://database:8529')
@@ -399,7 +399,10 @@ class lanzador:
             json_obj.append(results)
             self.logger.info(json_obj)
             json.dump(json_obj, json_file)
-        self.db.update_document(results, 'global_results')  # TODO: define update_document func
+        self.db.update_document(
+                doc_query={'name': namespace},
+                doc_update=results,
+                coll_name='experiments')
         self.access_flag.clear()
 
     def getResults(self, namespace, numberResults):
