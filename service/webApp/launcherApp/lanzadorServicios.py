@@ -34,7 +34,6 @@ class lanzador:
         self.namespaces_running = 0
         self.namespaces_limit = 0
         self.time_out = 0
-        self.access_flag = threading.Event()
         self.db_password = db_password
         self.db = None
         self.MODULE_DIR = os.path.dirname(__file__)
@@ -79,9 +78,6 @@ class lanzador:
                         parametros_nombre=parametros_nombre)
             # self.db.save_document(param_record, coll_name='parameter_records')
 
-        # TODO: Delete json things
-        with open('./results/parameter_record.json', 'w') as outfile:
-            json.dump(param_record, outfile)
 
     def connect_db(self):
         """Establish a connection with the database."""
@@ -93,9 +89,6 @@ class lanzador:
                         db_name='automodelingDB',
                         password=self.db_password,
                         url='mongodb://mongodb:27017/')
-                # self.db = dbConnector(
-                #         db_name='automodelingDB',
-                #         arangoURL='http://database:8529')
             except Exception:
                 self.logger.warning('NO DATABASE CONNECTION')
                 cont += 1
@@ -106,18 +99,12 @@ class lanzador:
         if cont > 10:
             self.logger.critical('FAILED TO CONNECT THE DATABASE')
 
-        # self.db.create_collection('parameter_records')
-        # self.db.create_collection('global_results')
-
-    # TODO: Improve the format for the documents
-
     def prepareDirectories(self):
         """Clean and make the directories needed."""
         if(os.path.isdir('./files')):
             shutil.rmtree('./files')
         os.mkdir("./files")
         os.mkdir("./files/launch")
-
         # if(os.path.isdir('./results')):
         #     shutil.rmtree('./results')
         # os.mkdir("./results")
@@ -257,7 +244,6 @@ class lanzador:
         # threads = []
         threadsCheckResults = []
         # param_record = {}
-
         # Se guardan los parametros en el fichero answers.txt
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros
@@ -385,25 +371,12 @@ class lanzador:
         results = {namespace: {
                 'time': last_time - start_time,
                 'last_results': lastResults}}
-
-        # TODO: Delete json things
-        if self.access_flag.isSet():
-            self.access_flag.wait()
-        self.access_flag.set()
-        # TODO: Delete json documments things
-        with open('./results/global_results.json', 'r') as json_file:
-            json_obj = json.load(json_file)
-        with open('./results/global_results.json', 'w') as json_file:
-            self.logger.info('Guardando resultados:')
-            self.logger.info(results)
-            json_obj.append(results)
-            self.logger.info(json_obj)
-            json.dump(json_obj, json_file)
+        self.logger.info('Guardando resultados:')
+        self.logger.info(results)
         self.db.update_document(
                 doc_query={'name': namespace},
                 doc_update=results,
                 coll_name='experiments')
-        self.access_flag.clear()
 
     def getResults(self, namespace, numberResults):
         """Obtiene el numero de resultados especificadas como parametro."""
