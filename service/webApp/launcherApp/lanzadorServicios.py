@@ -1,7 +1,6 @@
 # coding=utf-8
 """Launch several services in a Rancher platform."""
 import json
-# import sys
 import requests
 import itertools
 from subprocess import Popen, PIPE
@@ -26,9 +25,7 @@ from launcherApp.dbConnection import dbConnector
 class lanzador:
     """."""
 
-    def __init__(
-            self, url_entradas, access_key, secret_key,
-            db_password, logger):
+    def __init__(self, url_entradas, access_key, secret_key, db_password, logger):
         """Init the object."""
         self.url_entradas = url_entradas
         self.access_key = access_key
@@ -245,9 +242,7 @@ class lanzador:
 
         return (parametros_nombre, parametros)
 
-    def launchExperiments(
-            self, files, catalog_name,
-            parametros, parametros_nombre):
+    def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
         """Lanza las combinaciones entre los parametros de entrada."""
         cont = 1
         # threads = []

@@ -32,6 +32,7 @@ class dbConnector:
             self.db = self.conn.createDatabase(name=db_name)
             # Crearla
 
+
     def retrieve_collection(self, coll_name):  # doc, bd, coll?
         # Posiblemente innecesario
         """Return the collection in a list form."""
@@ -41,6 +42,7 @@ class dbConnector:
         for document in coll.fetchAll():
             document_list.append(document._store)
         return document_list
+
 
     def save_document(self, doc, coll_name):  # doc, bd, coll?
         """
@@ -58,6 +60,7 @@ class dbConnector:
         else:
             print('There is no collection with that name')
 
+
     def retrieve_document(self, coll_name, doc_name):  # doc, bd, coll?
         """Return the document in a python dic form."""
         self.db.reload()
@@ -69,6 +72,7 @@ class dbConnector:
                 return doc
         # doc._store
         pass
+
 
     def create_collection(self, coll_name):  # doc, bd, coll?
         """Create and return the collection."""
