@@ -90,6 +90,7 @@ def get_rancherUrl():
 @app.route('/params/<int:id>', methods=['GET'])
 def get_experiment_params(id):
     # TODO: funcion que devuelva los parametros de un experimento encontrado por id
+    # Hecho: dbConnector.get_document
     experiment = id
     return str(id)
 
@@ -99,7 +100,8 @@ def get_experiment_params(id):
 def get_experiment_results(id):
     experiment = id
     # TODO: funcion que pueda encontrar un experimento por id 
-    # y devuelva los resultados asociados 
+    # y devuelva los resultados asociados
+    # Hecho: dbConnector.get_document
     return str(id)
 
 
@@ -107,6 +109,7 @@ def get_experiment_results(id):
 @app.route('/queue', methods=['GET'])
 def get_queue():
     # TODO: funcion que devuelva todos los experimentos que estan por lanzarse o se están lanzando
+    # Hecho: dbConnector.get_document
     return 'Queue'
 
 
@@ -114,6 +117,7 @@ def get_queue():
 @app.route('/launch', methods=['POST'])
 def launch_experiments():
     # TODO: función que añade experimentos a la cola
+    # Hecho: dbConnector.save_document
     return 'New experiments'
 
 
@@ -121,6 +125,7 @@ def launch_experiments():
 @app.route('/delete/<int:id>', methods=['DELETE'])
 def delete_experiment():
     # TODO: funcion que elimine un experimento de la cola encontrado por id
+    # Hecho: dbConnector.delete_documents_param
     return 'Experiment deleted'
 
 
@@ -129,6 +134,7 @@ def delete_experiment():
 def delete_experiment_param(param, value):
     # TODO: funcion que elimine todos los experimentos de la cola que tengan
     # un valor de parametro determinado
+    # Hecho: dbConnector.delete_documents_param
     respon = ''.join(['Experiments of param: ', param, '=', value, ' deleted'])
     return respon
 
@@ -137,6 +143,7 @@ def delete_experiment_param(param, value):
 @app.route('/delete/all', methods=['DELETE'])
 def delete_queue():
     # TODO: funcion que elimine todos los experimentos de la cola
+    # Hecho: dbConnector.delete_all_documents
     return 'Queue deleted'
 
 

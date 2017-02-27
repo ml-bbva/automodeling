@@ -4,9 +4,12 @@ Module for the db connection. Now the connection is with a Arango db.
 Find more info about pyArango in:
 https://www.arangodb.com/tutorials/tutorial-python/
 """
-from pyArango.connection import Connection
-from pyArango.connection import *
-import pyArango
+
+from pymongo import MongoClient
+from pymongo.database import Database
+from pymongo import collection
+import pymongo
+from bson.objectid import ObjectId
 
 # TODO: Set Logger
 
@@ -14,9 +17,9 @@ import pyArango
 class dbConnector:
     """Connects with ONLY ONE db and perform operation on it."""
 
-    def __init__(self, db_name, password='.', user='root',
-                 arangoURL='http://127.0.0.1:8529'):
+    def __init__(self, db_name, password='.', user='root', mongoURL='http://127.0.0.1:8529'):
         """Init the database conection and set atributes db atribute."""
+        """
         if password is not '.':
             self.conn = Connection(username=user, password=password,
                                    arangoURL=arangoURL)
@@ -31,17 +34,31 @@ class dbConnector:
         else:
             self.db = self.conn.createDatabase(name=db_name)
             # Crearla
+        """
+        client = MongoClient(mongoURL, 27017) # TODO: conectar con username y password
+        self.db = Database(client, db_name)
+        collection.Collection(self.db, 'results')
+        collection.Collection(self.db, 'queue')
 
 
-    def retrieve_collection(self, coll_name):  # doc, bd, coll?
+
+#    def create_collection(self, coll_name): # Hay que probar si sirve como retrieve tambien
+        """Create and return the collection."""
+        #return collection.Collection(self.db, coll_name)
+
+
+#    def retrieve_collection(self, coll_name):  # doc, bd, coll?
         # Posiblemente innecesario
         """Return the collection in a list form."""
+        """
         self.db.reload()
         coll = self.db.collections[coll_name]
         document_list = []
         for document in coll.fetchAll():
             document_list.append(document._store)
         return document_list
+        """
+#        pass
 
 
     def save_document(self, doc, coll_name):  # doc, bd, coll?
@@ -51,6 +68,7 @@ class dbConnector:
         It is saved in the collection with the name specified.
         Doc, is in a python dic form.
         """
+        """
         self.db.reload()
         if self.db.hasCollection(coll_name):
             coll = self.db.collections[coll_name]
@@ -59,10 +77,13 @@ class dbConnector:
             document.save()
         else:
             print('There is no collection with that name')
+        """
+        self.db.coll_name.insert_one(doc)
 
 
-    def retrieve_document(self, coll_name, doc_name):  # doc, bd, coll?
+    def get_document(self, coll_name, doc_id):  # doc, bd, coll?
         """Return the document in a python dic form."""
+        """
         self.db.reload()
         # FIXME: Modo cutre de encontrar documentos sin clave
         # Usar AQL quizas
@@ -72,27 +93,16 @@ class dbConnector:
                 return doc
         # doc._store
         pass
+        """
+        return self.db.coll_name.find_one({"_id": ObjectId(doc_id)})
 
 
-    def create_collection(self, coll_name):  # doc, bd, coll?
-        """Create and return the collection."""
-        self.db.reload()
-        if self.db.hasCollection(coll_name):
-            print('The database already has a collection with that name')
-        else:
-            self.db.createCollection(name=coll_name)
+    def delete_documents_param(self, coll_name, param, value):
+        # Elimina todos los documentos con un parametro=valor determinado
+        self.db.coll_name.delete_many({param: value})
 
-    # def connect_db(self, db_name):
-    #     """
-    #     Connect with the database.
-    #
-    #     If the db doesn't exist it is created.
-    #     Return a db object?.
-    #     """
-    #     if self.conn.hasDatabase(db_name):
-    #         # conectartla
-    #         self.db = pyArango.database.Database(self.conn, db_name)
-    #         pass
-    #     else:
-    #         self.db = self.conn.createDatabase(name="automodelingDB")
-    #         # Crearla
+
+    def delete_all_documents(self, coll_name):
+        # Elimina todos los documentos de la colección
+        self.db.coll_name.delete_many({})
+
