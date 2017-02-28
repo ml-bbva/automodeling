@@ -6,7 +6,6 @@ import json2html
 import argparse
 import logging
 from launcherApp.lanzadorServicios import lanzador
-# from launcherApp.dbConnection import dbConnector
 
 app = Flask(__name__)
 
@@ -119,6 +118,13 @@ def launch_experiments():
     # TODO: función que añade experimentos a la cola
     # Hecho: dbConnector.save_document
     return 'New experiments'
+
+
+"""Confifurar los parámetro de la ejecución"""
+@app.route('/newparams', methods=['POST'])
+def set_execution_params():
+    # TODO: función que establezca los parámetros de la ejecución
+    return 'New parameters'
 
 
 """Eliminar un experimento concreto de la cola."""

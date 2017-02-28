@@ -16,8 +16,7 @@ from bson.objectid import ObjectId
 class dbConnector:
     """Connects with ONLY ONE db and perform operation on it."""
 
-    def __init__(self, db_name, password='.',
-                 user='root', url='mongodb://localhost:27017/'):
+    def __init__(self, db_name, password='.', user='root', url='mongodb://localhost:27017/'):
         """Init the database conection and set atributes db atribute."""
         # TODO: conectar con username y password
         client = MongoClient(url, 27017)
@@ -53,6 +52,7 @@ class dbConnector:
             {'$set': doc_update})
         pass
 
+    # Seguramente sobren las dos funciones de abajo
     def create_collection(self, coll_name):
         # Hay que probar si sirve como retrieve tambien
         """Create and return the collection."""

@@ -230,9 +230,7 @@ class lanzador:
 
         return (parametros_nombre, parametros)
 
-    def launchExperiments(
-            self, files, catalog_name,
-            parametros, parametros_nombre):
+    def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
         """
         Lanza las combinaciones entre los parametros de entrada.
 
