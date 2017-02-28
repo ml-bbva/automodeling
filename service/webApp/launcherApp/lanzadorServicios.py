@@ -78,7 +78,6 @@ class lanzador:
                         parametros_nombre=parametros_nombre)
             # self.db.save_document(param_record, coll_name='parameter_records')
 
-
     def connect_db(self):
         """Establish a connection with the database."""
         cont = 0
@@ -229,6 +228,69 @@ class lanzador:
                 parametros.append(listElem)
 
         return (parametros_nombre, parametros)
+
+    def get_grid_combinations(self, catalog_name, parametros, parametros_nombre):
+        """Store in the db the execution queue and de parameters."""
+        cont = 1
+        experiment_list = []
+        for param in itertools.product(*parametros):
+            # Substitucion de las variables en los ficheros
+            # Check -> Los nombres de los paramentros deben ser exactamente
+            #          los mismos que en los ficheros.
+            # El namespace no admite mayusculas
+            namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
+            # param_record[namespace] = {}
+            namespace_document = {}
+            namespace_document['name'] = namespace
+            for index in range(len(parametros_nombre)):
+                self.logger.info(
+                    parametros_nombre[index] + '=' +
+                    str(param[index]) + '\n')
+                namespace_document['parameters'][
+                    parametros_nombre[index]] = param[index]
+            id_experiment = self.db.save_document(
+                namespace_document,
+                coll_name='experiments')
+            experiment_list.append(id_experiment)
+            cont += 1
+        # FIXME: Comprobar la forma de hacer esto
+        return self.db.save_document(
+            {'execution_queue': experiment_list},
+            coll_name='queue')
+
+    def launch_experiment(self, files, queue_id):
+        """Launch the experiments in the execution queue."""
+        queue = self.db.get_document(coll_name='queue', doc_id=queue_id)
+        experiment = self.db.get_document(
+            coll_name='experiment',
+            doc_id=queue['execution_queue'].pop())
+        # experiment = self.db.get_document(
+        #     coll_name='experiment',
+        #     doc_id=self.db.pull_document(coll_name, queue_id))
+        #
+        # for file_name in files:
+        #     if(file_name != 'rancher-compose.yml'):
+        #         with open('./files/' + file_name, 'r') as f:
+        #             text = f.read()
+        #         for index in range(len(parametros_nombre)):
+        #             self.logger.info(
+        #                 parametros_nombre[index] + '=' +
+        #                 str(param[index]) + '\n')
+        #             text = text.replace(
+        #                 '${' + parametros_nombre[index] + '}',
+        #                 str(param[index]))
+        #             namespace_document['parameters'][
+        #                 parametros_nombre[index]] = param[index]
+        #         # Set by default the namespace
+        #         text = text.replace(
+        #             '${' + 'NAMESPACE' + '}',
+        #             namespace)
+        #         text = text.replace(
+        #             '${' + 'ROOT_TOPIC' + '}',
+        #             namespace)
+        #         with open('./files/launch/' + file_name, 'w') as f:
+        #             f.write(text)
+        pass
 
     def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
         """

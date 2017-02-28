@@ -29,9 +29,10 @@ class dbConnector:
         Save the document in the database.
 
         It is saved in the collection with the name specified.
-        Doc, is in a python dic form.
+        Doc, is in a python dic form. Return the id as a ObjectID.
         """
-        self.db[coll_name].insert_one(doc)
+        # FIXME: Ojo con devolver ObjectId
+        return self.db[coll_name].insert_one(doc)
 
     def get_document(self, coll_name, doc_id):  # doc, bd, coll?
         """Return the document in a python dic form."""
@@ -50,6 +51,17 @@ class dbConnector:
         self.db[coll_name].update_one(
             doc_query,
             {'$set': doc_update})
+
+    def push_document(self):
+        """."""
+        pass
+
+    def pop_document(self):
+        """."""
+        pass
+
+    def pull_document(self):
+        """."""
         pass
 
     # Seguramente sobren las dos funciones de abajo
