@@ -56,15 +56,21 @@ class dbConnector:
         """."""
         pass
 
-    def pop_document(self):
-        """."""
-        pass
+    def pop_document(self, doc_query, doc_key, coll_name):
+        """Return and remove the first element in the database."""
+        result = self.db[coll_name].find_one_and_update(
+            doc_query,
+            {'$pop': {
+                doc_key: -1
+            }}
+        )
+        return result[doc_key].pop(0)
 
     def pull_document(self, coll_name, doc_param, doc_value):
         """."""
-        self.db[coll_name].update_one(
-            {doc_param:doc_value},
-            {'$pull': doc_update})
+        # self.db[coll_name].update_one(
+        #     {doc_param: doc_value},
+        #     {'$pull': doc_update})
 
     # Seguramente sobren las dos funciones de abajo
     def create_collection(self, coll_name):

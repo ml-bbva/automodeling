@@ -50,6 +50,7 @@ class lanzador:
         self.namespaces_limit = entradas["limit_namespaces"]
 
         self.connect_db()
+        # TODO: Mirar a ver si existe la cola y obtenerla o crearla
         self.prepareDirectories()
         with open('./results/global_results.json', 'w') as f:
             self.logger.info('Creado fichero de resultados vacio')
@@ -234,7 +235,7 @@ class lanzador:
         # TODO: tal y como está, no permite almacenar nuevos. Habria que sustituir el
         #       guardado de la lista por un update
         cont = 1
-        #experiment_list = []
+        experiment_list = []
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros
             # Check -> Los nombres de los paramentros deben ser exactamente
@@ -253,22 +254,19 @@ class lanzador:
             id_experiment = self.db.save_document(
                 namespace_document,
                 coll_name='experiments')
-            #experiment_list.append({
-            #    "id_experiment":id_experiment,
-            #    "executing":"false"})
-            self.db.save_document({   # SE DEBE HACER UN PUSH A QUEUE
-                "id_experiment":id_experiment,
-                "executing":"false"},
-                "queue")
+            experiment_list.append({
+               "id_experiment": id_experiment,
+               "executing": "false"})
             cont += 1
         # FIXME: Comprobar la forma de hacer esto
-        #return self.db.save_document(
-        #    {'execution_queue': experiment_list},
-        #    coll_name='queue')
+        # TODO: Hacer un update en la cola en vez de crearla
+        return self.db.save_document(
+           {'execution_queue': experiment_list},
+           coll_name='queue')
 
     def launch_experiment(self, files, queue_id):
         """Launch the experiments in the execution queue."""
-        queue = self.db.get_document(coll_name='queue', doc_id=queue_id)
+        # queue = self.db.get_document(coll_name='queue', doc_id=queue_id)
         experiment = self.db.get_document(
             coll_name='experiment',
             doc_id=queue['execution_queue'].pop())
