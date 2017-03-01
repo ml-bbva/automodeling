@@ -84,7 +84,7 @@ class lanzador:
         cont = 0
         while cont < 10:
             try:
-                # TODO: Change for mongodb
+                # TODO: Check the db name
                 self.db = dbConnector(
                         db_name='automodelingDB',
                         password=self.db_password,
@@ -99,15 +99,16 @@ class lanzador:
         if cont > 10:
             self.logger.critical('FAILED TO CONNECT THE DATABASE')
 
-    def prepareDirectories(self):
-        """Clean and make the directories needed."""
+    def create_directories(self, dir_name):
+        """Create the directory with the specified name."""
+        os.mkdir('./files/' + dir_name)
+        os.mkdir('./files/' + dir_name + '/launch')
+
+    def clean_directories(self):
+        """Clean the files directory."""
         if(os.path.isdir('./files')):
             shutil.rmtree('./files')
         os.mkdir("./files")
-        os.mkdir("./files/launch")
-        # if(os.path.isdir('./results')):
-        #     shutil.rmtree('./results')
-        # os.mkdir("./results")
 
     def getConfiguration(self, configuration):
         """Extrae de un yaml toda la configuracion para el lanzador."""
@@ -230,7 +231,7 @@ class lanzador:
 
         return (parametros_nombre, parametros)
 
-    def get_grid_combinations(self, catalog_name, parametros, parametros_nombre):
+    def save_grid_combinations(self, catalog_name, parametros, parametros_nombre):
         """Store in the db the execution queue and de parameters."""
         # TODO: tal y como está, no permite almacenar nuevos. Habria que sustituir el
         #       guardado de la lista por un update
@@ -242,7 +243,6 @@ class lanzador:
             #          los mismos que en los ficheros.
             # El namespace no admite mayusculas
             namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
-            # param_record[namespace] = {}
             namespace_document = {}
             namespace_document['name'] = namespace
             for index in range(len(parametros_nombre)):
@@ -264,38 +264,30 @@ class lanzador:
            {'execution_queue': experiment_list},
            coll_name='queue')
 
-    def launch_experiment(self, files, queue_id):
+    def launch_experiment(self, files, experiment_id):
         """Launch the experiments in the execution queue."""
         # queue = self.db.get_document(coll_name='queue', doc_id=queue_id)
         experiment = self.db.get_document(
-            coll_name='experiment',
-            doc_id=queue['execution_queue'].pop())
-        experiment = self.db.get_document(
-            coll_name='experiment',
-            doc_id=self.db.pull_document(coll_name, queue_id))
-        #
-        # for file_name in files:
-        #     if(file_name != 'rancher-compose.yml'):
-        #         with open('./files/' + file_name, 'r') as f:
-        #             text = f.read()
-        #         for index in range(len(parametros_nombre)):
-        #             self.logger.info(
-        #                 parametros_nombre[index] + '=' +
-        #                 str(param[index]) + '\n')
-        #             text = text.replace(
-        #                 '${' + parametros_nombre[index] + '}',
-        #                 str(param[index]))
-        #             namespace_document['parameters'][
-        #                 parametros_nombre[index]] = param[index]
-        #         # Set by default the namespace
-        #         text = text.replace(
-        #             '${' + 'NAMESPACE' + '}',
-        #             namespace)
-        #         text = text.replace(
-        #             '${' + 'ROOT_TOPIC' + '}',
-        #             namespace)
-        #         with open('./files/launch/' + file_name, 'w') as f:
-        #             f.write(text)
+            coll_name='experiments',
+            doc_id=experiment_id)
+
+        # FIXME: Check how the loops are nested
+        for file_name in files:
+            if(file_name != 'rancher-compose.yml'):
+                with open('./files/' + file_name, 'r') as f:
+                    text = f.read()
+                for name, value in experiment['parameters'].items():
+                    self.logger.info(name + '=' + value + '\n')
+                    text = text.replace('${' + name + '}', value)
+                # Set by default the namespace
+                text = text.replace(
+                    '${' + 'NAMESPACE' + '}',
+                    experiment['name'])
+                text = text.replace(
+                    '${' + 'ROOT_TOPIC' + '}',
+                    experiment['name'])
+                with open('./files/launch/' + file_name, 'w') as f:
+                    f.write(text)
 
     def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
         """
@@ -306,9 +298,7 @@ class lanzador:
         (Inicializa la cola?).
         """
         cont = 1
-        # threads = []
         threadsCheckResults = []
-        # param_record = {}
         # Se guardan los parametros en el fichero answers.txt
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros

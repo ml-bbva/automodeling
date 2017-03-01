@@ -52,9 +52,14 @@ class dbConnector:
             doc_query,
             {'$set': doc_update})
 
-    def push_document(self):
+    def push_document(self, doc_query, doc_key, element, coll_name):
         """."""
-        pass
+        self.db[coll_name].update_one(
+            doc_query,
+            {'$push': {
+                doc_key: element
+            }}
+
 
     def pop_document(self, doc_query, doc_key, coll_name):
         """Return and remove the first element in the database."""
