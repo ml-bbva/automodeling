@@ -37,6 +37,7 @@ class lanzador:
         self.db_password = db_password
         self.db = None
         self.MODULE_DIR = os.path.dirname(__file__)
+        self.connect_db()
 
     def main(self):
         """Main execution of the class."""
@@ -355,6 +356,9 @@ class lanzador:
             cont = cont + 1
 
         return namespace_document  # FIXME: Return innecesario ahora
+
+    def launch_experiments(self, files, catalog_name, parametros, parametros_nombre):
+        
 
     def create_namespace(self, namespace):
         """Crea un namespace con el nombre dado."""
