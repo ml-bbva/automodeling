@@ -58,8 +58,7 @@ class dbConnector:
             doc_query,
             {'$push': {
                 doc_key: element
-            }}
-
+            }})
 
     def pop_document(self, doc_query, doc_key, coll_name):
         """Return and remove the first element in the database."""
@@ -69,7 +68,10 @@ class dbConnector:
                 doc_key: -1
             }}
         )
-        return result[doc_key].pop(0)
+        try:
+            return result[doc_key].pop(0)
+        except IndexError:
+            return False
 
     def pull_document(self, coll_name, doc_param, doc_value):
         """."""

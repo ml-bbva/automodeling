@@ -73,7 +73,7 @@ def get_results():
     # with open('../launcherApp/results/global_results.json', 'r') as f:
     # 	results = json.load(f)
     # return json2html.json2html.convert(json=results)
-    launcher.main()
+    launcher.launch_experiments()
     return render_template('index.html')
 
 
@@ -98,7 +98,7 @@ def get_experiment_params(id):
 @app.route('/results/<int:id>', methods=['GET'])
 def get_experiment_results(id):
     experiment = id
-    # TODO: funcion que pueda encontrar un experimento por id 
+    # TODO: funcion que pueda encontrar un experimento por id
     # y devuelva los resultados asociados
     # Hecho: dbConnector.get_document
     return str(id)
