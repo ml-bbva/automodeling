@@ -60,9 +60,11 @@ class dbConnector:
         """."""
         pass
 
-    def pull_document(self):
+    def pull_document(self, coll_name, doc_param, doc_value):
         """."""
-        pass
+        self.db[coll_name].update_one(
+            {doc_param:doc_value},
+            {'$pull': doc_update})
 
     # Seguramente sobren las dos funciones de abajo
     def create_collection(self, coll_name):

@@ -231,8 +231,10 @@ class lanzador:
 
     def get_grid_combinations(self, catalog_name, parametros, parametros_nombre):
         """Store in the db the execution queue and de parameters."""
+        # TODO: tal y como está, no permite almacenar nuevos. Habria que sustituir el
+        #       guardado de la lista por un update
         cont = 1
-        experiment_list = []
+        #experiment_list = []
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros
             # Check -> Los nombres de los paramentros deben ser exactamente
@@ -251,12 +253,18 @@ class lanzador:
             id_experiment = self.db.save_document(
                 namespace_document,
                 coll_name='experiments')
-            experiment_list.append(id_experiment)
+            #experiment_list.append({
+            #    "id_experiment":id_experiment,
+            #    "executing":"false"})
+            self.db.save_document({   # SE DEBE HACER UN PUSH A QUEUE
+                "id_experiment":id_experiment,
+                "executing":"false"},
+                "queue")
             cont += 1
         # FIXME: Comprobar la forma de hacer esto
-        return self.db.save_document(
-            {'execution_queue': experiment_list},
-            coll_name='queue')
+        #return self.db.save_document(
+        #    {'execution_queue': experiment_list},
+        #    coll_name='queue')
 
     def launch_experiment(self, files, queue_id):
         """Launch the experiments in the execution queue."""
@@ -264,9 +272,9 @@ class lanzador:
         experiment = self.db.get_document(
             coll_name='experiment',
             doc_id=queue['execution_queue'].pop())
-        # experiment = self.db.get_document(
-        #     coll_name='experiment',
-        #     doc_id=self.db.pull_document(coll_name, queue_id))
+        experiment = self.db.get_document(
+            coll_name='experiment',
+            doc_id=self.db.pull_document(coll_name, queue_id))
         #
         # for file_name in files:
         #     if(file_name != 'rancher-compose.yml'):
@@ -290,7 +298,6 @@ class lanzador:
         #             namespace)
         #         with open('./files/launch/' + file_name, 'w') as f:
         #             f.write(text)
-        pass
 
     def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
         """
