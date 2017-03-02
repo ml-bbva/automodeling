@@ -14,6 +14,7 @@ from operator import methodcaller
 import time
 import re
 from launcherApp.dbConnection import dbConnector
+import datetime
 
 # TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
@@ -227,12 +228,10 @@ class lanzador:
 
     def save_grid_combinations(self, catalog_name, parametros, parametros_nombre):
         """Store in the db the execution queue and de parameters."""
-        # TODO: tal y como está, no permite almacenar nuevos. Habria que sustituir el
-        #       guardado de la lista por un update
         cont = 1
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros
-            # Check -> Los nombres de los paramentros deben ser exactamente
+            # NOTE: Los nombres de los paramentros deben ser exactamente
             #          los mismos que en los ficheros.
             # El namespace no admite mayusculas
             namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
@@ -245,20 +244,20 @@ class lanzador:
                     str(param[index]) + '\n')
                 namespace_document['parameters'][
                     parametros_nombre[index]] = param[index]
+            namespace_document['create_time'] = datetime.datetime.utcnow()
             id_experiment = self.db.save_document(
                 namespace_document,
                 coll_name='experiments')
             self.db.push_document(
                 doc_query={},
-                doc_key='execution_queue',
-                doc_update=id_experiment,
+                key='execution_queue',
+                element=id_experiment,
                 coll_name='queue')
             cont += 1
         # FIXME: Comprobar la forma de hacer esto
 
     def launch_experiment(self, experiment_id):
         """Launch the experiments in the execution queue."""
-        # queue = self.db.get_document(coll_name='queue', doc_id=queue_id)
         experiment = self.db.get_document(
             coll_name='experiments',
             doc_id=experiment_id)
@@ -287,7 +286,14 @@ class lanzador:
                 self.start_service(
                     experiment['name'],
                     './files/' + experiment['name'] + '/launch/' + file)
-
+        # NOTE: Guarda cada experimento como documento en la coll de executions
+        self.db.update_document(
+            doc_query={'_id': experiment_id},
+            doc_update={'launch_time': datetime.datetime.utcnow()},
+            coll_name='experiments')
+        self.db.push_document(
+            doc_query={}, key='running',
+            element=experiment['name'], coll_name='execution')
         pid = self.startKafka(experiment['name'])
         thread = threading.Thread(
                 target=self.checkResults,
@@ -395,6 +401,9 @@ class lanzador:
             time.sleep(10)
             last_time = time.time()
 
+        self.db.pull_document(
+            doc_query={}, key='running',
+            element=namespace, coll_name='execution')
         self.rm_namespace(namespace, pid)
         self.logger.debug('Debería pasar por aquí para guardar los resultados')
         results = {namespace: {

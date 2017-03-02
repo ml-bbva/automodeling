@@ -1,7 +1,7 @@
 """
 Module for the db connection. Now the connection is with a MongoDB.
 
-Find more info about pyArango in:
+Find more info about pymongo in:
 https://docs.mongodb.com/getting-started/python/
 http://api.mongodb.com/python/current/index.html
 """
@@ -19,10 +19,13 @@ class dbConnector:
     def __init__(self, db_name, password='.', user='root', url='mongo-single.experiment1'):
         """Init the database conection and set atributes db atribute."""
         # TODO: conectar con username y password
+        # TODO: Lanzar extepcion cuando falle la conexion
         client = MongoClient(url, 27017)
         self.db = Database(client, db_name)
+        # NOTE: Crea colecciones para la cola, experimentos y ejecuciones
         collection.Collection(self.db, 'experiments')
         collection.Collection(self.db, 'queue')
+        collection.Collection(self.db, 'execution')
 
     def save_document(self, doc, coll_name):  # doc, bd, coll?
         """
@@ -36,48 +39,61 @@ class dbConnector:
 
     def get_document(self, coll_name, doc_id):  # doc, bd, coll?
         """Return the document in a python dic form."""
+        # FIXME: No se puede obtener por query??
         return self.db[coll_name].find_one({"_id": ObjectId(doc_id)})
 
-    def delete_documents_param(self, coll_name, param, value):
-        """Elimina todos los documentos con un parametro=valor determinado."""
-        self.db[coll_name].delete_many({param: value})
+    def delete_document(self, doc_query, coll_name):
+        """Elimina todos los documentos que coincida con la query."""
+        self.db[coll_name].delete_one(doc_query)
+
+    def delete_documents(self, doc_query, coll_name):
+        """Elimina todos los documentos que coincida con la query."""
+        self.db[coll_name].delete_many(doc_query)
 
     def delete_all_documents(self, coll_name):
         """Elimina todos los documentos de la coleccion."""
         self.db[coll_name].delete_many({})
 
     def update_document(self, doc_query, doc_update, coll_name):
-        """Update the first document (or all documments?) matched with the query."""
+        """Update the first document matched with the query."""
         self.db[coll_name].update_one(
             doc_query,
             {'$set': doc_update})
 
-    def push_document(self, doc_query, doc_key, element, coll_name):
+    def update_documents(self, doc_query, doc_update, coll_name):
+        """Update all documents matched with the query."""
+        self.db[coll_name].update_one(
+            doc_query,
+            {'$set': doc_update})
+
+    def push_document(self, doc_query, key, element, coll_name):
         """."""
         self.db[coll_name].update_one(
             doc_query,
             {'$push': {
-                doc_key: element
+                key: element
             }})
 
-    def pop_document(self, doc_query, doc_key, coll_name):
+    def pop_document(self, doc_query, key, coll_name):
         """Return and remove the first element in the database."""
         result = self.db[coll_name].find_one_and_update(
             doc_query,
             {'$pop': {
-                doc_key: -1
+                key: -1
             }}
         )
         try:
-            return result[doc_key].pop(0)
+            return result[key].pop(0)
         except IndexError:
             return False
 
-    def pull_document(self, coll_name, doc_param, doc_value):
+    def pull_document(self, doc_query, key, element, coll_name):
         """."""
-        # self.db[coll_name].update_one(
-        #     {doc_param: doc_value},
-        #     {'$pull': doc_update})
+        self.db[coll_name].update_one(
+            doc_query,
+            {'$pull': {
+                key: element
+            }})
 
     # Seguramente sobren las dos funciones de abajo
     def create_collection(self, coll_name):
