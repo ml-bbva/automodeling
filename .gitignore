@@ -1,3 +1,6 @@
 /service/webApp/launcherApp/files/*
 /service/webApp/launcherApp/results/*
 /service/webApp/launcherApp/answers.txt
+/service/launcherApp/files/*
+/service/launcherApp/results/*
+/service/launcherApp/answers.txt
