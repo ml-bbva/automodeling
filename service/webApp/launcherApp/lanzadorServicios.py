@@ -462,9 +462,8 @@ class lanzador:
             element=namespace, coll_name='execution')
         self.rm_namespace(namespace, pid)
         self.logger.debug('Debería pasar por aquí para guardar los resultados')
-        results = {namespace: {
-                'time': last_time - start_time,
-                'last_results': lastResults}}
+        results = {
+                'time': last_time - start_time, 'last_results': lastResults}
         self.logger.info('Guardando resultados:')
         self.logger.info(results)
         self.db.update_document(
