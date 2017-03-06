@@ -66,9 +66,9 @@ launcher = lanzador(
         args.secret_key, args.db_password, logger)
 
 
-"""Pagina inicial."""
 @app.route('/')
 def get_results():
+    """Pagina inicial."""
     # with open('/usr/src/myapp/results/global_results.json', 'r') as f:
     # with open('../launcherApp/results/global_results.json', 'r') as f:
     # 	results = json.load(f)
@@ -77,26 +77,27 @@ def get_results():
     return render_template('index.html')
 
 
-"""Devuelve la dirección configurada de rancher."""
 @app.route('/rancherUrl', methods=['GET'])
 def get_rancherUrl():
+    """Devuelve la dirección configurada de rancher."""
     with open('config.json', 'r') as f:
         configuration = json.load(f)
     return str(configuration)
 
 
-"""Devuelve los parametros de un experimento."""
 @app.route('/params/<int:id>', methods=['GET'])
 def get_experiment_params(id):
-    # TODO: funcion que devuelva los parametros de un experimento encontrado por id
+    """Devuelve los parametros de un experimento."""
+    # TODO: funcion que devuelva los parametros de un experimento
+    #       encontrado por id
     # Hecho: dbConnector.get_document
     experiment = id
     return str(id)
 
 
-"""Devuelve los resultados de un experimento."""
 @app.route('/results/<int:id>', methods=['GET'])
 def get_experiment_results(id):
+    """Devuelve los resultados de un experimento."""
     experiment = id
     # TODO: funcion que pueda encontrar un experimento por id
     # y devuelva los resultados asociados
@@ -104,40 +105,49 @@ def get_experiment_results(id):
     return str(id)
 
 
-"""Devuelve la cola de los experimentos que faltan por lanzarse."""
 @app.route('/queue', methods=['GET'])
 def get_queue():
-    # TODO: funcion que devuelva todos los experimentos que estan por lanzarse o se están lanzando
+    """Devuelve la cola de los experimentos que faltan por lanzarse."""
+    # TODO: funcion que devuelva todos los experimentos que estan por lanzarse
+    #       o se están lanzando
     # Hecho: dbConnector.get_document
-    return 'Queue'
+    return str(launcher.get_execution_queue())
 
 
-"""Añadir a la cola experimentos nuevos."""
+@app.route('/execution_list')
+def get_execution_list():
+    """."""
+    return str(launcher.get_execution_list())
+
+# TODO: función que añade experimentos a la cola
+
+
 @app.route('/launch', methods=['POST'])
 def launch_experiments():
-    # TODO: función que añade experimentos a la cola
+    """Lanzar experimentos en la cola."""
     # Hecho: dbConnector.save_document
-    return 'New experiments'
+    launcher.launch_experiments()
+    return 'Experimentos lanzandose'
 
 
-"""Confifurar los parámetro de la ejecución"""
 @app.route('/newparams', methods=['POST'])
 def set_execution_params():
+    """Confifurar los parametro de la ejecucion."""
     # TODO: función que establezca los parámetros de la ejecución
     return 'New parameters'
 
 
-"""Eliminar un experimento concreto de la cola."""
 @app.route('/delete/<int:id>', methods=['DELETE'])
 def delete_experiment():
+    """Eliminar un experimento concreto de la cola."""
     # TODO: funcion que elimine un experimento de la cola encontrado por id
     # Hecho: dbConnector.delete_documents_param
     return 'Experiment deleted'
 
 
-"""Eliminar experimentos con un parametro definido de la cola."""
 @app.route('/delete/<param>/<value>', methods=['DELETE'])
 def delete_experiment_param(param, value):
+    """Eliminar experimentos con un parametro definido de la cola."""
     # TODO: funcion que elimine todos los experimentos de la cola que tengan
     # un valor de parametro determinado
     # Hecho: dbConnector.delete_documents_param
@@ -145,23 +155,23 @@ def delete_experiment_param(param, value):
     return respon
 
 
-"""Eliminar todos los experimentos de la cola."""
 @app.route('/delete/all', methods=['DELETE'])
 def delete_queue():
+    """Eliminar todos los experimentos de la cola."""
     # TODO: funcion que elimine todos los experimentos de la cola
     # Hecho: dbConnector.delete_all_documents
     return 'Queue deleted'
 
 
-"""Devuelve el mensaje de error correspondiente."""
 @app.errorhandler(404)
 def page_not_found(e):
+    """Devuelve el mensaje de error correspondiente."""
     return "<h1>Página no encontrada</h1>", 404
 
 
-"""Devuelve el mensaje de error correspondiente."""
 @app.errorhandler(500)
 def page_not_found(e):
+    """Devuelve el mensaje de error correspondiente."""
     return "<h1>Fallo en el servidor</h1>", 500
 
 

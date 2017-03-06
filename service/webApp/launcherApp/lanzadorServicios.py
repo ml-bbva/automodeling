@@ -15,10 +15,13 @@ import time
 import re
 from launcherApp.dbConnection import dbConnector
 import datetime
+from bson.objectid import ObjectId
 
 # TO SEE DEBUG AND INFO
 # TODO: Check Error Handling
 # TODO: Fix it for local usage.
+# TODO: reformta del nombre de las colecciones
+# NOTE: name of the collections -> experiments, queue, execution
 
 
 class lanzador:
@@ -72,15 +75,96 @@ class lanzador:
                         parametros_nombre=parametros_nombre)
             # self.db.save_document(param_record, coll_name='parameter_records')
 
+    def launch_experiment(self, experiment_id):
+        """Launch the experiments in the execution queue."""
+        experiment = self.db.get_document(
+            doc_query={'_id': experiment_id},
+            coll_name='experiments')
+        self.logger.debug(experiment['files'])
+
+        for name, value in experiment['parameters'].items():
+            for file_name, content in experiment['files']:
+                if(file_name != 'rancher-compose.yml'):
+                    # with open('./files/' + file_name, 'r') as f:
+                    #     text = f.read()
+                    self.logger.info(name + '=' + value + '\n')
+                    content = content.replace('${' + name + '}', value)
+                    # Set by default the namespace
+                    content = content.replace(
+                        '${' + 'NAMESPACE' + '}',
+                        experiment['name'])
+                    content = content.replace(
+                        '${' + 'ROOT_TOPIC' + '}',
+                        experiment['name'])
+                    with open('./files/launch/' + file_name, 'w') as f:
+                        f.write(content)
+        self.logger.info('Preparado para lanzar namespace ' + experiment['name'])
+        # Se crea un namespace por cada combinacion
+        self.create_namespace(experiment['name'])
+        for file_name in experiment['files']:
+            if(file_name != 'rancher-compose.yml'):
+                self.start_service(
+                    experiment['name'],
+                    './files/launch/' + file_name)
+        # NOTE: Guarda cada experimento como documento en la coll de executions
+        self.db.update_document(
+            doc_query={'_id': experiment_id},
+            doc_update={'launch_time': datetime.datetime.utcnow()},
+            coll_name='experiments')
+        self.db.push_document(
+            doc_query={}, key='running',
+            element=experiment['name'], coll_name='execution')
+        pid = self.startKafka(experiment['name'])
+        thread = threading.Thread(
+                target=self.checkResults,
+                args=[experiment['name'], pid])
+        thread.start()
+
+    def launch_experiments(self):
+        """."""
+        print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
+        entradas = requests.get(url=self.url_entradas, verify=False)
+        entradas = yaml.load(entradas.text)
+        self.logger.info('Obtenido el fichero de configuracion ' +
+                         'para los parametros')
+        self.logger.debug(entradas)
+        self.time_out = entradas["time_out"]
+        self.namespaces_limit = entradas["limit_namespaces"]
+
+        for catalog_name, catalog_param in entradas['catalog_services'].items():
+            self.create_directories(catalog_name)
+            files, url_rancher = self.getConfiguration(
+                catalog_param,
+                catalog_name)
+            self.configurateKubectl(url_rancher)
+            parametros_nombre, parametros = self.getDefinedParams(
+                catalog_param['PARAMS'])
+            parametros_nombre, parametros = self.addDefaultParams(
+                parametros_nombre,
+                parametros,
+                catalog_name)
+            self.save_grid_combinations(
+                catalog_name,
+                files,
+                parametros,
+                parametros_nombre)
+        self.logger.info('Combinations save for the catalog')
+        while(self.namespaces_running >= self.namespaces_limit):
+            continue
+        experiment_id = self.db.pop_document({}, 'queue', 'queue')
+        while experiment_id:
+            self.launch_experiment(experiment_id)
+            self.namespaces_running += 1
+            while(self.namespaces_running >= self.namespaces_limit):
+                continue
+
     def connect_db(self):
         """Establish a connection with the database."""
         cont = 0
         while cont < 10:
             try:
-                # TODO: Check the db name
                 self.db = dbConnector(
-                        db_name='automodelingDB'
-                        )
+                        db_name='automodelingDB')
             except Exception:
                 self.logger.warning('NO DATABASE CONNECTION')
                 cont += 1
@@ -88,13 +172,15 @@ class lanzador:
             else:
                 self.logger.info('Database succesfuly connected')
                 break
-        if cont > 10:
+        if cont is 10:
             self.logger.critical('FAILED TO CONNECT THE DATABASE')
 
     def create_directories(self, dir_name):
         """Create the directory with the specified name."""
-        os.mkdir('./files/' + dir_name)
-        os.mkdir('./files/' + dir_name + '/launch')
+        if not os.path.isdir('./files/' + dir_name):
+            os.mkdir('./files/' + dir_name)
+        if not os.path.isdir('./files/' + dir_name + '/launch'):
+            os.mkdir('./files/' + dir_name + '/launch')
 
     def clean_directories(self):
         """Clean the files directory."""
@@ -118,10 +204,9 @@ class lanzador:
 
         # Se obtienen de la API todos los ficheros que se van a arrancar
         # Se guardan en la carpeta ./files, que se ha creado antes
-        for file in files:
-            name_file = file
-            with open('./files/' + catalog_name + '/' + name_file, 'w') as file_service:
-                file_service.write(str(content_all['files'][name_file]))
+        for file_name in files:
+            with open('./files/' + catalog_name + '/' + file_name, 'w') as file_service:
+                file_service.write(str(content_all['files'][file_name]))
 
         return (files, url_rancher)
 
@@ -133,10 +218,11 @@ class lanzador:
         self.logger.debug('Empezamos a configurar kubectl')
 
         # calculo de la ruta relativa donde se encuentra la carpeta .kube
-        ##filepath = '/root/.kube/'
-        #if args.local:  #TODO: New local configuration needed
-        filepath = '/home/ignacio/.kube/'
-        ##os.system('cp ' + self.MODULE_DIR + '/config ' + filepath)
+        filepath = '/root/.kube/'
+        # if args.local:  #TODO: New local configuration needed
+        # filepath = '/home/ignacio/.kube/'
+
+        os.system('cp ' + self.MODULE_DIR + '/config ' + filepath)
 
         # Obtenemos la plantilla para el config
         with open(filepath + 'config', 'r') as f:
@@ -165,7 +251,7 @@ class lanzador:
         # 3. TODO: HIDDEN_SIZE debe aceptar parametros que no fueran absolute
         for parametro in parametros_yml:
             self.logger.info(parametro)
-            self.logger.info(type(parametro))
+            self.logger.debug(type(parametro))
             parametros_nombre.append(parametro)
             # Obtiene el parametro HIDDEN_SIZE, que es especial
             if(parametro == 'HIDDEN_SIZE'):
@@ -206,7 +292,7 @@ class lanzador:
         return (parametros_nombre, parametros)
 
     def addDefaultParams(self, parametros_nombre, parametros, catalog_name):
-        """Add default params to the files."""
+        """Add default params to parameter list in the argumments."""
         with open('./files/' + catalog_name + '/rancher-compose.yml', 'r') as f:
             fileContent = f.read()
             rancherComposeContent = yaml.load(fileContent)
@@ -226,7 +312,7 @@ class lanzador:
 
         return (parametros_nombre, parametros)
 
-    def save_grid_combinations(self, catalog_name, parametros, parametros_nombre):
+    def save_grid_combinations(self, catalog_name, files, parametros, parametros_nombre):
         """Store in the db the execution queue and de parameters."""
         cont = 1
         for param in itertools.product(*parametros):
@@ -236,6 +322,7 @@ class lanzador:
             # El namespace no admite mayusculas
             namespace = ''.join([catalog_name, 'model{num}'.format(num=cont)])
             namespace_document = {}
+            namespace_document['files'] = []
             namespace_document['name'] = namespace
             namespace_document['parameters'] = {}
             for index in range(len(parametros_nombre)):
@@ -245,96 +332,27 @@ class lanzador:
                 namespace_document['parameters'][
                     parametros_nombre[index]] = param[index]
             namespace_document['create_time'] = datetime.datetime.utcnow()
+            for file_name in files:
+                namespace_document['files'] = files[file_name]
+            self.logger.debug(namespace_document)
             id_experiment = self.db.save_document(
                 namespace_document,
-                coll_name='experiments')
+                coll_name='experiments').inserted_id
             self.db.push_document(
                 doc_query={},
-                key='execution_queue',
+                key='queue',
                 element=id_experiment,
                 coll_name='queue')
             cont += 1
         # FIXME: Comprobar la forma de hacer esto
 
-    def launch_experiment(self, experiment_id):
-        """Launch the experiments in the execution queue."""
-        experiment = self.db.get_document(
-            coll_name='experiments',
-            doc_id=experiment_id)
-        # FIXME: Check how the loops are nested
-        for file_name in experiment['files']:
-            if(file_name != 'rancher-compose.yml'):
-                with open('./files/' + file_name, 'r') as f:
-                    text = f.read()
-                for name, value in experiment['parameters'].items():
-                    self.logger.info(name + '=' + value + '\n')
-                    text = text.replace('${' + name + '}', value)
-                # Set by default the namespace
-                text = text.replace(
-                    '${' + 'NAMESPACE' + '}',
-                    experiment['name'])
-                text = text.replace(
-                    '${' + 'ROOT_TOPIC' + '}',
-                    experiment['name'])
-                with open('./files/launch/' + file_name, 'w') as f:
-                    f.write(text)
-        self.logger.info('Preparado para lanzar namespace ' + experiment['name'])
-        # Se crea un namespace por cada combinacion
-        self.create_namespace(experiment['name'])
-        for file in experiment['files']:
-            if(file != 'rancher-compose.yml'):
-                self.start_service(
-                    experiment['name'],
-                    './files/' + experiment['name'] + '/launch/' + file)
-        # NOTE: Guarda cada experimento como documento en la coll de executions
-        self.db.update_document(
-            doc_query={'_id': experiment_id},
-            doc_update={'launch_time': datetime.datetime.utcnow()},
-            coll_name='experiments')
-        self.db.push_document(
-            doc_query={}, key='running',
-            element=experiment['name'], coll_name='execution')
-        pid = self.startKafka(experiment['name'])
-        thread = threading.Thread(
-                target=self.checkResults,
-                args=[experiment['name'], pid])
-        thread.start()
+    def get_execution_queue(self):
+        """Return the execution queue in a list form."""
+        return self.db.get_document({}, 'queue')['queue']
 
-    def launch_experiments(self):
-        """."""
-        entradas = requests.get(url=self.url_entradas, verify=False)
-        entradas = yaml.load(entradas.text)
-        self.logger.info('Obtenido el fichero de configuracion ' +
-                         'para los parametros')
-        self.logger.debug(entradas)
-        self.time_out = entradas["time_out"]
-        self.namespaces_limit = entradas["limit_namespaces"]
-
-        for catalog_name, catalog_param in entradas['catalog_services'].items():
-            self.create_directories(catalog_name)
-            files, url_rancher = self.getConfiguration(
-                catalog_param,
-                catalog_name)
-            self.configurateKubectl(url_rancher)
-            parametros_nombre, parametros = self.getDefinedParams(
-                catalog_param['PARAMS'])
-            parametros_nombre, parametros = self.addDefaultParams(
-                parametros_nombre,
-                parametros,
-                catalog_name)
-            self.save_grid_combinations(
-                catalog_name,
-                parametros,
-                parametros_nombre)
-
-        while(self.namespaces_running >= self.namespaces_limit):
-            continue
-        experiment_id = self.db.pop_document({}, 'execution_queue', 'queue')
-        while experiment_id:
-            self.launch_experiment(experiment_id)
-            self.namespaces_running += 1
-            while(self.namespaces_running >= self.namespaces_limit):
-                continue
+    def get_running_list(self):
+        """Return the current running experiments in a list form."""
+        return self.db.get_document({}, 'running')['running']
 
     def create_namespace(self, namespace):
         """Crea un namespace con el nombre dado."""

@@ -4,3 +4,4 @@
 /service/launcherApp/files/*
 /service/launcherApp/results/*
 /service/launcherApp/answers.txt
+/service/webApp/test-app

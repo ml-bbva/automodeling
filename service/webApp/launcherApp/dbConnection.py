@@ -7,7 +7,6 @@ http://api.mongodb.com/python/current/index.html
 """
 from pymongo import MongoClient
 from pymongo.database import Database
-from pymongo import collection
 from bson.objectid import ObjectId
 
 # TODO: Set Logger
@@ -16,18 +15,29 @@ from bson.objectid import ObjectId
 class dbConnector:
     """Connects with ONLY ONE db and perform operation on it."""
 
-    def __init__(self, db_name, password='.', user='root', url='mongo-single.experiment1'):
-        """Init the database conection and set atributes db atribute."""
+    def __init__(
+            self, db_name, password='.',
+            user='root', url='mongo-single.experiment1.svc.cluster.local'):
+        """
+        Init the database conection and set atributes db atribute.
+
+        The collections needed for the app are created here.
+        """
         # TODO: conectar con username y password
-        # TODO: Lanzar extepcion cuando falle la conexion
+        # NOTE: La creacion de las colleciones necesarias va aqui. Deberia?
         client = MongoClient(url, 27017)
         self.db = Database(client, db_name)
-        # NOTE: Crea colecciones para la cola, experimentos y ejecuciones
-        collection.Collection(self.db, 'experiments')
-        collection.Collection(self.db, 'queue')
-        collection.Collection(self.db, 'execution')
+        # Create needed collections
+        self.create_collection('experiments')
+        self.create_collection('queue')
+        self.create_collection('running')
+        # Create needed documents
+        if self.db['queue'].find().count() is 0:
+            self.save_document({'queue': []}, 'queue')
+        if self.db['running'].find().count() is 0:
+            self.save_document({'running': []}, 'running')
 
-    def save_document(self, doc, coll_name):  # doc, bd, coll?
+    def save_document(self, doc, coll_name):
         """
         Save the document in the database.
 
@@ -37,10 +47,10 @@ class dbConnector:
         # FIXME: Ojo con devolver ObjectId
         return self.db[coll_name].insert_one(doc)
 
-    def get_document(self, coll_name, doc_id):  # doc, bd, coll?
+    def get_document(self, doc_query, coll_name):  # doc, bd, coll?
         """Return the document in a python dic form."""
         # FIXME: No se puede obtener por query??
-        return self.db[coll_name].find_one({"_id": ObjectId(doc_id)})
+        return self.db[coll_name].find_one(doc_query)
 
     def delete_document(self, doc_query, coll_name):
         """Elimina todos los documentos que coincida con la query."""
@@ -84,7 +94,7 @@ class dbConnector:
         )
         try:
             return result[key].pop(0)
-        except IndexError:
+        except TypeError:
             return False
 
     def pull_document(self, doc_query, key, element, coll_name):
@@ -95,12 +105,16 @@ class dbConnector:
                 key: element
             }})
 
-    # Seguramente sobren las dos funciones de abajo
     def create_collection(self, coll_name):
         # Hay que probar si sirve como retrieve tambien
-        """Create and return the collection."""
+        """Create the collection. Return True if succed or False if fail."""
         # return collection.Collection(self.db, coll_name)
-        pass
+        coll_names = self.db.collection_names()
+        if coll_name not in coll_names:
+            self.db.create_collection(coll_name)
+            return True
+        else:
+            return False
 
     def retrieve_collection(self, coll_name):  # doc, bd, coll?
         # Posiblemente innecesario
