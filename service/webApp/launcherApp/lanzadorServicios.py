@@ -514,7 +514,28 @@ class lanzador:
         """Mata el proceso kafka creado por popen."""
         os.killpg(os.getpgid(pid), signal.SIGTERM)
 
+    def stop_experiment(self, id):
+    	# TODO: funcion que envie al monitor la orden de dejar de escuchar. A esta funcion
+    	# hay que llamarla desde el rm_namespace
+    	# Llama a rm_namespace
+    	# Primero obtiene el nombre del namespace
+    	namespace = self.db.get_document({"id_experiment":id},"experiments")["name"]
+    	self.rm_namespace(namespace)
 
+    	# Elimina de la lista de experimentos ejecutandose
+    	self.db.delete_document({"id_experiment":id},"running")
+
+    	# Lanza el primero de los experimentos en cola
+    	# Primero lo saca de la cola de espera
+    	experiment = self.db.pop_document({"id_experiment":id},"queue")
+    	if(experiment == false):
+    		pass
+
+    	# Luego lo guarda en la cola de ejecución
+    	self.db.push_document({},"id_experiment",experiment["id_experiment"],"running")
+
+    	# Ejecuta el experimento nuevo
+    	self.launch_experiment(experiment["id_experiment"])
 
 
 

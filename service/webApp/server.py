@@ -142,6 +142,7 @@ def delete_experiment():
     """Eliminar un experimento concreto de la cola."""
     # TODO: funcion que elimine un experimento de la cola encontrado por id
     # Hecho: dbConnector.delete_documents_param
+    launcher.stop_experiment(id)
     return 'Experiment deleted'
 
 
