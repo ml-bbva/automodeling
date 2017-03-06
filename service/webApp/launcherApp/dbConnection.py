@@ -49,7 +49,7 @@ class dbConnector:
 
     def get_document(self, doc_query, coll_name):  # doc, bd, coll?
         """Return the document in a python dic form."""
-        # FIXME: No se puede obtener por query??
+        # TODO: hacer que devuelva false si la query no da result
         return self.db[coll_name].find_one(doc_query)
 
     def delete_document(self, doc_query, coll_name):
@@ -94,7 +94,7 @@ class dbConnector:
         )
         try:
             return result[key].pop(0)
-        except TypeError:
+        except IndexError:
             return False
 
     def pull_document(self, doc_query, key, element, coll_name):

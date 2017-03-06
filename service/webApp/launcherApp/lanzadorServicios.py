@@ -39,6 +39,7 @@ class lanzador:
         self.db_password = db_password
         self.db = None
         self.MODULE_DIR = os.path.dirname(__file__)
+        self.logger.info(self.MODULE_DIR)
         self.connect_db()
         self.clean_directories()
 
@@ -77,35 +78,49 @@ class lanzador:
 
     def launch_experiment(self, experiment_id):
         """Launch the experiments in the execution queue."""
+        self.logger.info(type(experiment_id))
         experiment = self.db.get_document(
             doc_query={'_id': experiment_id},
             coll_name='experiments')
-        self.logger.debug(experiment['files'])
+        self.logger.debug(type(experiment))
+        self.logger.info(experiment['files'])
 
-        for name, value in experiment['parameters'].items():
-            for file_name, content in experiment['files']:
-                if(file_name != 'rancher-compose.yml'):
-                    # with open('./files/' + file_name, 'r') as f:
-                    #     text = f.read()
-                    self.logger.info(name + '=' + value + '\n')
-                    content = content.replace('${' + name + '}', value)
-                    # Set by default the namespace
-                    content = content.replace(
-                        '${' + 'NAMESPACE' + '}',
-                        experiment['name'])
-                    content = content.replace(
-                        '${' + 'ROOT_TOPIC' + '}',
-                        experiment['name'])
-                    with open('./files/launch/' + file_name, 'w') as f:
-                        f.write(content)
-        self.logger.info('Preparado para lanzar namespace ' + experiment['name'])
+        # for file_name, text in experiment['files']:
+        # self.logger.info(name + '=' + value)
+        for file_name in experiment['files']:
+            if(file_name != 'rancher-compose.yml'):
+                with open(
+                        self.MODULE_DIR + '/files/'
+                        + experiment['experiment_group'] + '/'
+                        + file_name,
+                        'r') as f:
+                    text = f.read()
+                for name, value in experiment['parameters'].items():
+                    text = text.replace('${' + name + '}', value)
+                # Set by default the namespace
+                text = text.replace(
+                    '${' + 'NAMESPACE' + '}',
+                    experiment['name'])
+                text = text.replace(
+                    '${' + 'ROOT_TOPIC' + '}',
+                    experiment['name'])
+                with open(
+                        self.MODULE_DIR + '/files/'
+                        + experiment['experiment_group']
+                        + '/launch/' + file_name,
+                        'w') as f:
+                    f.write(text)
+        self.logger.info(
+            'Preparado para lanzar namespace ' + experiment['name'])
         # Se crea un namespace por cada combinacion
         self.create_namespace(experiment['name'])
         for file_name in experiment['files']:
             if(file_name != 'rancher-compose.yml'):
                 self.start_service(
                     experiment['name'],
-                    './files/launch/' + file_name)
+                    self.MODULE_DIR + '/files/'
+                    + experiment['experiment_group']
+                    + '/launch/' + file_name)
         # NOTE: Guarda cada experimento como documento en la coll de executions
         self.db.update_document(
             doc_query={'_id': experiment_id},
@@ -152,11 +167,13 @@ class lanzador:
         while(self.namespaces_running >= self.namespaces_limit):
             continue
         experiment_id = self.db.pop_document({}, 'queue', 'queue')
+
         while experiment_id:
             self.launch_experiment(experiment_id)
             self.namespaces_running += 1
             while(self.namespaces_running >= self.namespaces_limit):
                 continue
+            experiment_id = self.db.pop_document({}, 'queue', 'queue')
 
     def connect_db(self):
         """Establish a connection with the database."""
@@ -177,19 +194,25 @@ class lanzador:
 
     def create_directories(self, dir_name):
         """Create the directory with the specified name."""
-        if not os.path.isdir('./files/' + dir_name):
-            os.mkdir('./files/' + dir_name)
-        if not os.path.isdir('./files/' + dir_name + '/launch'):
-            os.mkdir('./files/' + dir_name + '/launch')
+        if not os.path.isdir(self.MODULE_DIR + '/files/' + dir_name):
+            os.mkdir(self.MODULE_DIR + '/files/' + dir_name)
+        if not os.path.isdir(self.MODULE_DIR + '/files/' + dir_name + '/launch'):
+            os.mkdir(self.MODULE_DIR + '/files/' + dir_name + '/launch')
 
     def clean_directories(self):
         """Clean the files directory."""
-        if(os.path.isdir('./files')):
-            shutil.rmtree('./files')
-        os.mkdir("./files")
+        if(os.path.isdir(self.MODULE_DIR + '/files')):
+            shutil.rmtree(self.MODULE_DIR + '/files')
+        os.mkdir(self.MODULE_DIR + '/files')
 
     def getConfiguration(self, configuration, catalog_name):
-        """Extrae de un yaml toda la configuracion para el lanzador."""
+        """
+        Extrae de un yaml toda la configuracion para el lanzador.
+
+        Devuelve la lista de archivos necesarios para la plantilla del catalogo
+        y escribe en una subcarpeta dentro de files con el nombre del catalogo
+        los archivos necesarios para lanzar los experimentos.
+        """
         # Peticion a la API para obtener el dockercompose
         url_catalog = configuration["URL_API"]
         url_rancher = configuration["URL_RANCHER"]
@@ -201,11 +224,11 @@ class lanzador:
 
         # Obtención de los ficheros de los servicios que hay que arrancar
         files = content_all['files']
-
-        # Se obtienen de la API todos los ficheros que se van a arrancar
-        # Se guardan en la carpeta ./files, que se ha creado antes
         for file_name in files:
-            with open('./files/' + catalog_name + '/' + file_name, 'w') as file_service:
+            with open(
+                    self.MODULE_DIR + '/files/'
+                    + catalog_name + '/' + file_name,
+                    'w') as file_service:
                 file_service.write(str(content_all['files'][file_name]))
 
         return (files, url_rancher)
@@ -241,7 +264,13 @@ class lanzador:
             yaml.dump(kubeConfig, f)
 
     def getDefinedParams(self, parametros_yml):
-        """Obtiene los parametros para un stack del catalogo."""
+        """
+        Obtiene los parametros para un stack del catalogo.
+
+        Devuelve los parametros en forma de dos listas: una con el nombre de
+        los parametros y otra con los parametros en si.
+        """
+        # FIXME: En vez de devolver una tupla devolver diccionario???
         parametros_nombre = []
         parametros = []
         self.logger.debug(parametros_yml)
@@ -292,8 +321,16 @@ class lanzador:
         return (parametros_nombre, parametros)
 
     def addDefaultParams(self, parametros_nombre, parametros, catalog_name):
-        """Add default params to parameter list in the argumments."""
-        with open('./files/' + catalog_name + '/rancher-compose.yml', 'r') as f:
+        """
+        Add default values to the params remaining.
+
+        The func adds the defaults values in the parameters not specified in
+        the parameter list given in the arguments.
+        """
+        with open(
+                self.MODULE_DIR + '/files/'
+                + catalog_name + '/rancher-compose.yml',
+                'r') as f:
             fileContent = f.read()
             rancherComposeContent = yaml.load(fileContent)
 
@@ -313,7 +350,7 @@ class lanzador:
         return (parametros_nombre, parametros)
 
     def save_grid_combinations(self, catalog_name, files, parametros, parametros_nombre):
-        """Store in the db the execution queue and de parameters."""
+        """Store in the db the execution queue and the parameters."""
         cont = 1
         for param in itertools.product(*parametros):
             # Substitucion de las variables en los ficheros
@@ -324,16 +361,17 @@ class lanzador:
             namespace_document = {}
             namespace_document['files'] = []
             namespace_document['name'] = namespace
+            namespace_document['experiment_group'] = catalog_name
             namespace_document['parameters'] = {}
             for index in range(len(parametros_nombre)):
                 self.logger.info(
                     parametros_nombre[index] + '=' +
                     str(param[index]) + '\n')
                 namespace_document['parameters'][
-                    parametros_nombre[index]] = param[index]
+                    parametros_nombre[index]] = str(param[index])
             namespace_document['create_time'] = datetime.datetime.utcnow()
             for file_name in files:
-                namespace_document['files'] = files[file_name]
+                namespace_document['files'].append(file_name)
             self.logger.debug(namespace_document)
             id_experiment = self.db.save_document(
                 namespace_document,
@@ -387,7 +425,7 @@ class lanzador:
     def startKafka(self, namespace):
         """Start the kafka consumer process."""
         pid = 0
-        with open('./results/'+namespace, 'w') as file_results:
+        with open(self.MODULE_DIR + '/results/' + namespace, 'w') as file_results:
             kafkaConsumer = Popen(
                 [self.MODULE_DIR + '/exec/kafka-console-consumer'],
                 env={"KAFKA_SERVICE": "kafka.default.svc.cluster.local",
@@ -436,7 +474,7 @@ class lanzador:
 
     def getResults(self, namespace, numberResults):
         """Obtiene el numero de resultados especificadas como parametro."""
-        process1 = Popen(['cat', './results/'+namespace], stdout=PIPE)
+        process1 = Popen(['cat', self.MODULE_DIR + '/results/'+namespace], stdout=PIPE)
         process2 = Popen(
                 ['tail', '-'+str(numberResults)],
                 stdin=process1.stdout,
@@ -476,6 +514,27 @@ class lanzador:
     def killProcess(self, pid):
         """Mata el proceso kafka creado por popen."""
         os.killpg(os.getpgid(pid), signal.SIGTERM)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     # def launchExperiments(self, files, catalog_name, parametros, parametros_nombre):
