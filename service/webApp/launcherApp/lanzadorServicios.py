@@ -43,39 +43,6 @@ class lanzador:
         self.connect_db()
         self.clean_directories()
 
-    def main(self):
-        """Main execution of the class."""
-        print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
-        entradas = requests.get(url=self.url_entradas, verify=False)
-        entradas = yaml.load(entradas.text)
-        self.logger.info('Obtenido el fichero de configuracion ' +
-                         'para los parametros')
-        self.logger.debug(entradas)
-        self.time_out = entradas["time_out"]
-        self.namespaces_limit = entradas["limit_namespaces"]
-
-        self.prepareDirectories()
-        catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
-        self.logger.info(catalogs)
-        param_record = {}
-
-        for catalog in catalogs:
-            self.logger.info(catalog)
-            files, url, url_catalog = self.getConfiguration(
-                    configuration=entradas["catalog_services"][catalog])
-            self.configurateKubectl(rancher_url=url)
-            os.system(self.MODULE_DIR + '/exec/kubectl version')
-            parametros_nombre, parametros = self.getDefinedParams(
-                    entradas["catalog_services"][catalog]['PARAMS'])
-            parametros_nombre, parametros = self.addDefaultParams(
-                    parametros_nombre, parametros)
-            param_record[catalog] = self.launchExperiments(
-                        files=files,
-                        catalog_name=catalog,
-                        parametros=parametros,
-                        parametros_nombre=parametros_nombre)
-            # self.db.save_document(param_record, coll_name='parameter_records')
-
     def launch_experiment(self, experiment_id):
         """Launch the experiments in the execution queue."""
         self.logger.info(type(experiment_id))
@@ -128,7 +95,7 @@ class lanzador:
             coll_name='experiments')
         self.db.push_document(
             doc_query={}, key='running',
-            element=experiment['name'], coll_name='execution')
+            element=experiment_id, coll_name='execution')
         pid = self.startKafka(experiment['name'])
         thread = threading.Thread(
                 target=self.checkResults,
@@ -164,15 +131,15 @@ class lanzador:
                 parametros,
                 parametros_nombre)
         self.logger.info('Combinations save for the catalog')
-        while(self.namespaces_running >= self.namespaces_limit):
-            continue
+        #while(self.namespaces_running >= self.namespaces_limit):
+        #    continue
         experiment_id = self.db.pop_document({}, 'queue', 'queue')
 
-        while experiment_id:
+        while (experiment_id and self.namespaces_running < self.namespaces_limit):
             self.launch_experiment(experiment_id)
             self.namespaces_running += 1
-            while(self.namespaces_running >= self.namespaces_limit):
-                continue
+            #while(self.namespaces_running >= self.namespaces_limit):
+            #    continue
             experiment_id = self.db.pop_document({}, 'queue', 'queue')
 
     def connect_db(self):
@@ -519,20 +486,23 @@ class lanzador:
     	# hay que llamarla desde el rm_namespace
     	# Llama a rm_namespace
     	# Primero obtiene el nombre del namespace
-    	namespace = self.db.get_document({"id_experiment":id},"experiments")["name"]
-    	self.rm_namespace(namespace)
+    	namespace = self.db.get_document({"_id":ObjectId(id)},"experiments")["name"]
+      	self.rm_namespace(namespace)
 
     	# Elimina de la lista de experimentos ejecutandose
-    	self.db.delete_document({"id_experiment":id},"running")
+    	self.db.delete_document({"id_experiment":ObjectId(id)},"running")
 
+        self.execute_next(id)
+
+    def execute_next(self, id):
     	# Lanza el primero de los experimentos en cola
     	# Primero lo saca de la cola de espera
-    	experiment = self.db.pop_document({"id_experiment":id},"queue")
+    	experiment = self.db.pop_document({"id_experiment":ObjectId(id)},"queue")
     	if(experiment == false):
-    		pass
+    		return False
 
     	# Luego lo guarda en la cola de ejecución
-    	self.db.push_document({},"id_experiment",experiment["id_experiment"],"running")
+    	self.db.push_document({},"running",experiment["id_experiment"],"running")
 
     	# Ejecuta el experimento nuevo
     	self.launch_experiment(experiment["id_experiment"])
@@ -623,3 +593,40 @@ class lanzador:
     #         cont = cont + 1
     #
     #     return namespace_document  # FIXME: Return innecesario ahora
+
+
+
+
+
+    # def main(self):
+    #     """Main execution of the class."""
+    #     print('COMIENZA PROCESO DE LANZAMIENTO EXPERIMENTOS')
+    #     entradas = requests.get(url=self.url_entradas, verify=False)
+    #     entradas = yaml.load(entradas.text)
+    #     self.logger.info('Obtenido el fichero de configuracion ' +
+    #                      'para los parametros')
+    #     self.logger.debug(entradas)
+    #     self.time_out = entradas["time_out"]
+    #     self.namespaces_limit = entradas["limit_namespaces"]
+    #
+    #     self.prepareDirectories()
+    #     catalogs = [catalog for catalog in entradas["catalog_services"]][::-1]
+    #     self.logger.info(catalogs)
+    #     param_record = {}
+    #
+    #     for catalog in catalogs:
+    #         self.logger.info(catalog)
+    #         files, url, url_catalog = self.getConfiguration(
+    #                 configuration=entradas["catalog_services"][catalog])
+    #         self.configurateKubectl(rancher_url=url)
+    #         os.system(self.MODULE_DIR + '/exec/kubectl version')
+    #         parametros_nombre, parametros = self.getDefinedParams(
+    #                 entradas["catalog_services"][catalog]['PARAMS'])
+    #         parametros_nombre, parametros = self.addDefaultParams(
+    #                 parametros_nombre, parametros)
+    #         param_record[catalog] = self.launchExperiments(
+    #                     files=files,
+    #                     catalog_name=catalog,
+    #                     parametros=parametros,
+    #                     parametros_nombre=parametros_nombre)
+    #         # self.db.save_document(param_record, coll_name='parameter_records')
