@@ -131,14 +131,14 @@ class lanzador:
                 parametros,
                 parametros_nombre)
         self.logger.info('Combinations save for the catalog')
-        #while(self.namespaces_running >= self.namespaces_limit):
+        # while(self.namespaces_running >= self.namespaces_limit):
         #    continue
         experiment_id = self.db.pop_document({}, 'queue', 'queue')
 
         while (experiment_id and self.namespaces_running < self.namespaces_limit):
             self.launch_experiment(experiment_id)
             self.namespaces_running += 1
-            #while(self.namespaces_running >= self.namespaces_limit):
+            # while(self.namespaces_running >= self.namespaces_limit):
             #    continue
             experiment_id = self.db.pop_document({}, 'queue', 'queue')
 
@@ -316,7 +316,8 @@ class lanzador:
 
         return (parametros_nombre, parametros)
 
-    def save_grid_combinations(self, catalog_name, files, parametros, parametros_nombre):
+    def save_grid_combinations(
+            self, catalog_name, files, parametros, parametros_nombre):
         """Store in the db the execution queue and the parameters."""
         cont = 1
         for param in itertools.product(*parametros):
@@ -361,7 +362,8 @@ class lanzador:
 
     def create_namespace(self, namespace):
         """Crea un namespace con el nombre dado."""
-        os.system(self.MODULE_DIR + '/exec/kubectl create namespace ' + namespace)
+        os.system(
+            self.MODULE_DIR + '/exec/kubectl create namespace ' + namespace)
         self.namespaces_running += 1
 
     def rm_namespace(self, namespace, pid):
@@ -481,31 +483,32 @@ class lanzador:
         """Mata el proceso kafka creado por popen."""
         os.killpg(os.getpgid(pid), signal.SIGTERM)
 
+# TODO: funcion que envie al monitor la orden de dejar de escuchar.
+# A esta funcion hay que llamarla desde el rm_namespace
+
     def stop_experiment(self, id):
-    	# TODO: funcion que envie al monitor la orden de dejar de escuchar. A esta funcion
-    	# hay que llamarla desde el rm_namespace
-    	# Llama a rm_namespace
-    	# Primero obtiene el nombre del namespace
-    	namespace = self.db.get_document({"_id":ObjectId(id)},"experiments")["name"]
-      	self.rm_namespace(namespace)
-
-    	# Elimina de la lista de experimentos ejecutandose
-    	self.db.delete_document({"id_experiment":ObjectId(id)},"running")
-
+        """Stop one of the current experiments execution and start the next."""
+        # Llama a rm_namespace
+        # Primero obtiene el nombre del namespace
+        namespace = self.db.get_document(
+            {"_id": ObjectId(id)}, "experiments")["name"]
+        self.rm_namespace(namespace)
+        # Elimina de la lista de experimentos ejecutandose
+        self.db.delete_document({"id_experiment": ObjectId(id)}, "running")
         self.execute_next(id)
 
     def execute_next(self, id):
-    	# Lanza el primero de los experimentos en cola
-    	# Primero lo saca de la cola de espera
-    	experiment = self.db.pop_document({"id_experiment":ObjectId(id)},"queue")
-    	if(experiment == false):
-    		return False
-
-    	# Luego lo guarda en la cola de ejecución
-    	self.db.push_document({},"running",experiment["id_experiment"],"running")
-
-    	# Ejecuta el experimento nuevo
-    	self.launch_experiment(experiment["id_experiment"])
+        """Launch the first experiment in the queue."""
+        # Primero lo saca de la cola de espera
+        experiment = self.db.pop_document(
+                {"id_experiment": ObjectId(id)}, "queue")
+        if not experiment:
+            return False
+        # Luego lo guarda en la cola de ejecución
+        self.db.push_document(
+                {}, "running", experiment["id_experiment"], "running")
+        # Ejecuta el experimento nuevo
+        self.launch_experiment(experiment["id_experiment"])
 
 
 
