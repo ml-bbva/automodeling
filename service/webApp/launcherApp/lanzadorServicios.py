@@ -208,9 +208,9 @@ class lanzador:
         self.logger.debug('Empezamos a configurar kubectl')
 
         # calculo de la ruta relativa donde se encuentra la carpeta .kube
-        filepath = '/root/.kube/'
+        ##filepath = '/root/.kube/'
         # if args.local:  #TODO: New local configuration needed
-        # filepath = '/home/ignacio/.kube/'
+        filepath = '/home/ignacio/.kube/'
 
         os.system('cp ' + self.MODULE_DIR + '/config ' + filepath)
 

@@ -67,101 +67,111 @@ launcher = lanzador(
 
 
 @app.route('/')
-def get_results():
+def get_index():
     """Pagina inicial."""
-    # with open('/usr/src/myapp/results/global_results.json', 'r') as f:
-    # with open('../launcherApp/results/global_results.json', 'r') as f:
-    # 	results = json.load(f)
-    # return json2html.json2html.convert(json=results)
-    launcher.launch_experiments()
-    return render_template('index.html')
+    # TODO: links{ proyectos, cola, pull}
+    # TODO: actions{ process_yaml, launch_experiments, stop_everything}
+    #return render_template('index.html')-> Servirá en un futuro
+    return "<h1>Página inicial</h1>"
 
-
-@app.route('/rancherUrl', methods=['GET'])
-def get_rancherUrl():
-    """Devuelve la dirección configurada de rancher."""
-    with open('config.json', 'r') as f:
-        configuration = json.load(f)
-    return str(configuration)
-
-
-@app.route('/params/<int:id>', methods=['GET'])
-def get_experiment_params(id):
-    """Devuelve los parametros de un experimento."""
-    # TODO: funcion que devuelva los parametros de un experimento
-    #       encontrado por id
-    # Hecho: dbConnector.get_document
-    experiment = id
-    return str(id)
-
-
-@app.route('/results/<int:id>', methods=['GET'])
-def get_experiment_results(id):
-    """Devuelve los resultados de un experimento."""
-    experiment = id
-    # TODO: funcion que pueda encontrar un experimento por id
-    # y devuelva los resultados asociados
-    # Hecho: dbConnector.get_document
-    return str(id)
-
-
-@app.route('/queue', methods=['GET'])
-def get_queue():
-    """Devuelve la cola de los experimentos que faltan por lanzarse."""
-    # TODO: funcion que devuelva todos los experimentos que estan por lanzarse
-    #       o se están lanzando
-    # Hecho: dbConnector.get_document
-    return str(launcher.get_execution_queue())
-
-
-@app.route('/execution_list')
-def get_execution_list():
-    """."""
-    return str(launcher.get_execution_list())
-
-# TODO: función que añade experimentos a la cola
-
-
-@app.route('/launch', methods=['POST'])
+@app.route('/launch_experiments', methods=['POST'])
 def launch_experiments():
     """Lanzar experimentos en la cola."""
     # Hecho: dbConnector.save_document
     launcher.launch_experiments()
     return 'Experimentos lanzandose'
 
+@app.route('/stop_everything')
+def stop_everything():
+    """Para todo"""
+    # TODO: funcion que para todo lo que se esta ejecutando
+    # Se hace en el lanzador
+    pass
 
-@app.route('/newparams', methods=['POST'])
-def set_execution_params():
-    """Confifurar los parametro de la ejecucion."""
-    # TODO: función que establezca los parámetros de la ejecución
-    return 'New parameters'
+@app.route('/process_yaml')
+def process_yaml():
+    # TODO: funcion que trata el yaml que se subirá
+    pass
 
+@app.route('/queue', methods=['GET'])
+def get_queue():
+    """Devuelve la cola de los experimentos que faltan por lanzarse."""
+    # TODO: links{ lista de cada experimento} -> redirecciona a
+    # /projects/project_id/experiment_id
+    # TODO: actions{ delete_queue}
+    return str(launcher.get_execution_queue())
 
-@app.route('/delete/<int:id>', methods=['DELETE'])
-def delete_experiment():
-    """Eliminar un experimento concreto de la cola."""
-    # TODO: funcion que elimine un experimento de la cola encontrado por id
-    # Hecho: dbConnector.delete_documents_param
-    launcher.stop_experiment(id)
-    return 'Experiment deleted'
-
-
-@app.route('/delete/<param>/<value>', methods=['DELETE'])
-def delete_experiment_param(param, value):
-    """Eliminar experimentos con un parametro definido de la cola."""
-    # TODO: funcion que elimine todos los experimentos de la cola que tengan
-    # un valor de parametro determinado
-    # Hecho: dbConnector.delete_documents_param
-    respon = ''.join(['Experiments of param: ', param, '=', value, ' deleted'])
-    return respon
-
-
-@app.route('/delete/all', methods=['DELETE'])
+@app.route('/delete_queue', methods=['DELETE'])
 def delete_queue():
-    """Eliminar todos los experimentos de la cola."""
-    # TODO: funcion que elimine todos los experimentos de la cola
-    # Hecho: dbConnector.delete_all_documents
-    return 'Queue deleted'
+    """Elimina todos los experimentos de la cola"""
+    # TODO: funcion que elimina los experimentos de la cola
+    # funcion que se define en el lanzador
+    pass
+
+@app.route('/pull', methods=['GET'])
+def get_pull():
+    """Devuelve la cola de los experimentos que faltan por lanzarse."""
+    # TODO: links{ lista de cada experimento} -> redirecciona a
+    # /projects/project_id/experiment_id
+    # TODO: actions{ delete_pull}
+    return str(launcher.get_execution_list())
+
+@app.route('/delete_pull', methods=['DELETE'])
+def delete_pull():
+    """Elimina todos los experimentos de la cola"""
+    # TODO: funcion que elimina los experimentos del pull
+    # funcion que se define en el lanzador
+    pass
+
+@app.route('/projects')
+def get_projects():
+    """Página de todos los proyectos"""
+    # TODO: links{ cada proyecto}
+    # TODO: actions{ delete_everything}
+    # TODO: info{ time_out, namespaces_limit}
+    return "<h1>Esta es la página de los proyectos</h1>"
+
+@app.route('/projects/delete_everything', methods=['DELETE'])
+def delete_everything():
+    """Elimina todos los experimentos de todos los proyectos"""
+    # TODO: funcion que elimine todo
+    # se hace en el lanzador
+    pass
+
+@app.route('/projects/<str:project_id>')
+def get_project(project_id):
+    """Página de un solo proyecto"""
+    # TODO: links{ cada experimento}
+    # TODO: actions{ delete_experiments}
+    # TODO: info{ parametros del proyecto, best_experiment, worst_experiment}
+    pass
+
+@app.route('/projects/<str:project_id>/delete_experiments', methods=['DELETE'])
+def delete_experiments(project_id):
+    """Elimina todos los experimentos de un proyecto"""
+    # TODO: funcion que elimine todos los experimentos del proyecto
+    # esta se hace en el lanzador
+    pass
+
+@app.route('/projects/<str:project_id>/<str:experiment_id>')
+def get_experiment(project_id,experiment_id):
+    """Devuelve la página de un experimento"""
+    # TODO: funcion que devuelve toda la informacion de un experimento
+    # se hace en el lanzador
+    # TODO: actions{ delete_experiment}
+    # TODO: info{ parametros del experimento, estado del experimento}
+    pass
+
+@app.route('/projects/<str:project_id>/<str:experiment_id>/delete_experiment',
+    methods=['DELETE'])
+def delete_experiment():
+    """Elimina el experimento"""
+    # TODO: funcion que elimina el experimento
+    # se hace en el lanzador
+    pass
+
+
+# TODO: función que añade experimentos a la cola
 
 
 @app.errorhandler(404)

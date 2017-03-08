@@ -17,7 +17,8 @@ class dbConnector:
 
     def __init__(
             self, db_name, password='.',
-            user='root', url='mongo-single.experiment1.svc.cluster.local'):
+            user='root', url='mongo-single.experiment1'):
+            #.svc.cluster.local
         """
         Init the database conection and set atributes db atribute.
 
