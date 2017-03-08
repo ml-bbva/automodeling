@@ -18,12 +18,21 @@ spec:
     spec:
       containers:
       - name: webapp
+        env:
+        - name: URL_ENTRADAS
+          value: ${URL_ENTRADAS}
+        - name: ACCESS_KEY
+          value: "${ACCESS_KEY}"
+        - name: SECRET_KEY
+          value: ${SECRET_KEY}
+        - name: DB_KEY
+          value: ${DB_KEY}
         command:
         - "sh"
         args:
         - "-c"
-        - "python server.py ${url_entradas} ${access_key} ${secret_key} ${db_password} --info"
-        image: automodeling/webapp:1.4.0-web
+        - "run.sh"
+        image: innotech/automodeling-scheduler:latest
         imagePullPolicy: Always
         ports:
           - containerPort: 5000

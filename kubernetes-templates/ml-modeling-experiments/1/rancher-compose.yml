@@ -1,21 +1,21 @@
 .catalog:
     name: "Experiments Launcher"
-    version: "v1.0-Web"
-    description: "Automatic launcher for services in the catalog with diferent configurations. Web interface for visualization"
+    version: "v1.0-Api"
+    description: "Automatic launcher for services in the catalog with diferent configurations. The control"
     questions:
-        - variable: "access_key"
+        - variable: "ACCESS_KEY"
           label: "Access key for Rancher"
           required: true
           type: "string"
-        - variable: "secret_key"
+        - variable: "SECRET_KEY"
           label: "Secret key for Rancher"
           required: true
           type: "string"
-        - variable: "url_entradas"
+        - variable: "URL_ENTRADAS"
           label: "Url where the yaml file with the configuration parametres is located."
           required: true
           type: "string"
-        - variable: "db_password"
+        - variable: "DB_KEY"
           label: "Password for the root user in the Database."
           required: true
           type: "string"
